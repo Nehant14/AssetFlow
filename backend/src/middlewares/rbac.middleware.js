@@ -1,12 +1,16 @@
-// Strict roles check matching schema definitions
-module.exports = (allowedRoles) => {
+module.exports = (allowedRoles = []) => {
   return (req, res, next) => {
-    if (!req.user || !allowedRoles.includes(req.user.role)) {
-      return res.status(403).json({ 
-        status: 'error', 
-        message: 'Forbidden: You do not have permission to perform this action.' 
+    if (!req.user) {
+      return res.status(401).json({ status: 'error', message: 'Not authenticated.' });
+    }
+
+    if (!allowedRoles.includes(req.user.role)) {
+      return res.status(403).json({
+        status: 'error',
+        message: 'You do not have permission to perform this action.'
       });
     }
+
     next();
   };
 };

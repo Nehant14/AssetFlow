@@ -91,8 +91,8 @@ const Allocations = () => {
   };
 
   return (
-    <div className="p-4 sm:p-6 max-w-6xl mx-auto">
-      <div className="flex flex-wrap items-center justify-between gap-2 mb-5">
+    <div className="p-6 max-w-6xl mx-auto">
+      <div className="flex items-center justify-between mb-5">
         <div>
           <h1 className="text-lg font-bold text-ink">Allocations</h1>
           <p className="text-xs text-ink-faint mt-0.5">Assign assets to employees or departments, and process returns</p>
@@ -103,7 +103,7 @@ const Allocations = () => {
       {canManage && (
         <form onSubmit={handleSubmit} className="card p-4 mb-6">
           <p className="panel-header mb-3">New allocation</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <select required value={form.assetId}
               onChange={e => setForm({ ...form, assetId: e.target.value })} className="field">
               <option value="">Select Available Asset</option>

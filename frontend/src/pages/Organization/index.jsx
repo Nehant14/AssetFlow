@@ -84,7 +84,7 @@ const Organization = () => {
   };
 
   return (
-    <div className="p-4 sm:p-6 max-w-6xl mx-auto">
+    <div className="p-6 max-w-6xl mx-auto">
       <div className="mb-5">
         <h1 className="text-lg font-bold text-ink">Organization</h1>
         <p className="text-xs text-ink-faint mt-0.5">Departments, asset categories, and employee roles</p>

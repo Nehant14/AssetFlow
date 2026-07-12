@@ -85,7 +85,7 @@ const Audits = () => {
   };
 
   return (
-    <div className="p-4 sm:p-6 max-w-6xl mx-auto">
+    <div className="p-6 max-w-6xl mx-auto">
       <div className="mb-5">
         <h1 className="text-lg font-bold text-ink">Audits</h1>
         <p className="text-xs text-ink-faint mt-0.5">Run physical verification cycles against the asset registry</p>
@@ -102,7 +102,7 @@ const Audits = () => {
             <div className="space-y-3">
               <input type="text" placeholder="Cycle Name" required value={cycleForm.name}
                 onChange={e => setCycleForm({ ...cycleForm, name: e.target.value })} className="field w-full" />
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 <input type="date" required value={cycleForm.startDate}
                   onChange={e => setCycleForm({ ...cycleForm, startDate: e.target.value })} className="field" />
                 <input type="date" required value={cycleForm.endDate}

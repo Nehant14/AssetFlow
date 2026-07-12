@@ -16,22 +16,11 @@ const Navbar = ({ onMenuClick }) => {
     .toUpperCase();
 
   return (
-    <header className="h-16 shrink-0 bg-base-800 border-b border-line flex items-center justify-between gap-2 px-3 sm:px-6">
-      <div className="flex items-center gap-2 min-w-0">
-        {/* Hamburger: only shown below md, where the Sidebar becomes a drawer */}
-        <button
-          onClick={onMenuClick}
-          aria-label="Toggle navigation menu"
-          className="md:hidden w-8 h-8 shrink-0 rounded-md bg-panel2 border border-line flex items-center justify-center text-ink-dim hover:text-accent hover:border-accent/30 transition-colors"
-        >
-          <Menu size={16} />
-        </button>
-        <h2 className="text-sm font-semibold text-ink truncate">
-          <span className="hidden sm:inline">AssetFlow — Enterprise Asset Management</span>
-          <span className="sm:hidden">AssetFlow</span>
-        </h2>
-      </div>
-      <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+    <header className="h-16 shrink-0 bg-base-800 border-b border-line flex items-center justify-between px-6">
+      <h2 className="text-sm font-semibold text-ink">
+        AssetFlow — Enterprise Asset Management
+      </h2>
+      <div className="flex items-center gap-4">
         <button
           onClick={toggleTheme}
           title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
@@ -39,7 +28,7 @@ const Navbar = ({ onMenuClick }) => {
         >
           {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
         </button>
-        <Link to="/notifications" className="badge badge-info hover:opacity-80 transition-opacity hidden sm:inline-flex">
+        <Link to="/notifications" className="badge badge-info hover:opacity-80 transition-opacity">
           {user?.role || 'Employee'}
         </Link>
         <div className="flex items-center gap-2.5">

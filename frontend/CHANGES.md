@@ -1,45 +1,5 @@
 # AssetFlow Frontend — Rebuilt to Match the Backend
 
-## Fix pass — login bug + responsiveness (this change)
-
-- **Critical bug fix:** `AuthContext.login()` read `response.data.user` /
-  `response.data.token`, but every backend response is wrapped as
-  `{ status, data: {...} }` (confirmed in `auth.service.js`'s `login()`,
-  which returns `{ token, user }` inside `data`). Every other API call in
-  this codebase already unwraps with `res.data?.data`; this one didn't, so
-  `user` and `token` were always `undefined` and login silently failed
-  (the string `"undefined"` was even being written to `localStorage` as the
-  token). Fixed to destructure `response.data.data`.
-- **Dead-endpoint calls removed:** `notifications.api.js` exported
-  `getNotifications()` and `markNotificationRead()`, and the Notifications
-  page called both, but `notification.routes.js` only mounts
-  `GET /dashboard-kpis` — there's no personal-inbox list or mark-as-read
-  route. Those calls (and the resulting 404s on every page load) were
-  removed; the Inbox panel now explains that only the KPI summary is
-  available from the API today, matching how Allocations/Maintenance/Audits
-  already handle backend gaps.
-- **Responsiveness:**
-  - The Sidebar was a fixed `w-64` column always rendered alongside the
-    content with no way to hide it, so on phone widths it ate over half the
-    screen. It's now an off-canvas drawer below the `md` breakpoint,
-    toggled by a hamburger button in the Navbar, with a backdrop and
-    auto-close on navigation. Desktop/tablet keeps the original inline
-    sidebar.
-  - `.table-shell` used `overflow-hidden`, which clipped table columns
-    instead of letting them scroll on narrow screens. Changed to
-    `overflow-x-auto` with a `min-w-[640px]` on `.table-base` so tables
-    scroll horizontally on mobile instead of losing data off the edge.
-  - Navbar: title truncates/shortens, non-essential items (role badge,
-    full name) hide below `sm`/`md`, and a hamburger button appears for the
-    new mobile drawer.
-  - Page containers use `p-4` instead of `p-6` below `sm`; a few forms that
-    were `grid-cols-2` at every width (Asset registration, New allocation,
-    audit cycle dates) now start at `grid-cols-1` and only go to 2+ columns
-    from `sm`/`md` up, so fields aren't cramped on ~320–375px screens. Page
-    header rows (`title + count`) now wrap instead of overflowing.
-
-## Original rebuild
-
 The frontend in this repo was originally built for a different problem
 statement (a vehicle fleet management app: Vehicles, Drivers, Trips, Fuel
 Expenses, License Reminders). The backend (`/backend`) implements a

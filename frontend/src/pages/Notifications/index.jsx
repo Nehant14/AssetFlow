@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { PackageCheck, ArrowLeftRight, CalendarClock, Wrench } from 'lucide-react';
-import { getDashboardKPIs } from '../../api/notifications.api';
+import { getDashboardKPIs, getNotifications, markNotificationRead } from '../../api/notifications.api';
 
 const emptyKpis = { totalAvailable: 0, totalAllocated: 0, activeBookings: 0, pendingMaint: 0, maintenanceToday: 0, pendingTransfers: 0, upcomingReturns: 0, overdueReturns: 0 };
 
@@ -18,19 +18,30 @@ const Tile = ({ label, value, icon }) => (
 
 const Notifications = () => {
   const [kpis, setKpis] = useState(emptyKpis);
+  const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getDashboardKPIs()
-      .then((kpiRes) => {
+    Promise.all([getDashboardKPIs(), getNotifications()])
+      .then(([kpiRes, notifRes]) => {
         setKpis({ ...emptyKpis, ...(kpiRes.data?.data || kpiRes.data) });
+        setNotifications(notifRes.data?.data || notifRes.data || []);
       })
       .catch(err => console.error('Failed to fetch notifications', err))
       .finally(() => setLoading(false));
   }, []);
 
+  const handleMarkRead = async (id) => {
+    try {
+      await markNotificationRead(id);
+      setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
+    } catch (err) {
+      console.error('Failed to mark notification read', err);
+    }
+  };
+
   return (
-    <div className="p-4 sm:p-6 max-w-6xl mx-auto">
+    <div className="p-6 max-w-6xl mx-auto">
       <div className="mb-5">
         <h1 className="text-lg font-bold text-ink">Notifications</h1>
         <p className="text-xs text-ink-faint mt-0.5">System-wide alerts derived from live asset status</p>
@@ -49,16 +60,20 @@ const Notifications = () => {
 
           <div className="card p-4">
             <p className="panel-header mb-3">Inbox</p>
-            {/* The backend has a Notification model but doesn't expose a list
-                or mark-as-read route (only GET /dashboard-kpis), so there's
-                nothing to fetch here yet — this is a placeholder rather than
-                a broken/empty-looking inbox. */}
-            <p className="text-ink-faint text-sm">
-              A personal notification inbox isn't available from the API yet — only the
-              KPI summary above. Once the backend adds a list endpoint for the
-              <code className="mx-1 px-1 py-0.5 rounded bg-panel2 border border-line text-xs">Notification</code>
-              model, per-user alerts will appear here.
-            </p>
+            {notifications.length === 0 ? (
+              <p className="text-ink-faint text-sm">No notifications yet.</p>
+            ) : (
+              <ul className="space-y-2">
+                {notifications.map(n => (
+                  <li key={n.id} className={`rounded border p-3 text-sm ${n.isRead ? 'border-line bg-panel2' : 'border-accent/40 bg-accent/10'}`}>
+                    <div className="flex items-center justify-between gap-2">
+                      <span>{n.message}</span>
+                      {!n.isRead && <button className="text-xs text-accent" onClick={() => handleMarkRead(n.id)}>Mark read</button>}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </>
       )}

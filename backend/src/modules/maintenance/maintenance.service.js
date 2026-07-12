@@ -6,23 +6,23 @@ const prisma = require('../../config/db');
 // writes to the real columns.
 async function createMaintenanceRequest({ assetId, requesterId, description, priority }) {
   return await prisma.maintenanceRequest.create({
-    data: { assetId, raisedById: requesterId, issue: description, priority }
+    data: { assetId: Number(assetId), raisedById: Number(requesterId), issue: description, priority: priority || 'Medium' }
   });
 }
 
 async function updateMaintenanceStatus(id, status) {
-  const record = await prisma.maintenanceRequest.update({
-    where: { id: Number(id) },
-    data: { status }
-  });
+  const record = await prisma.maintenanceRequest.update({ where: { id: Number(id) }, data: { status } });
 
-  // Flip asset state accordingly based on approvals.
-  // MaintenanceStatus/AssetStatus enum values are PascalCase with no
-  // underscores (InProgress / UnderMaintenance), not In_Progress / Under_Maintenance.
-  if (status === 'Approved' || status === 'InProgress') {
+  if (status === 'Approved' || status === 'InProgress' || status === 'TechnicianAssigned') {
     await prisma.asset.update({ where: { id: record.assetId }, data: { status: 'UnderMaintenance' } });
   } else if (status === 'Resolved' || status === 'Rejected') {
     await prisma.asset.update({ where: { id: record.assetId }, data: { status: 'Available' } });
+  }
+
+  if (status === 'Approved') {
+    await prisma.notification.create({ data: { userId: record.raisedById, message: 'Your maintenance request was approved.' } });
+  } else if (status === 'Rejected') {
+    await prisma.notification.create({ data: { userId: record.raisedById, message: 'Your maintenance request was rejected.' } });
   }
 
   return record;

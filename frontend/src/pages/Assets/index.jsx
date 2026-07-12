@@ -119,8 +119,8 @@ const Assets = () => {
   };
 
   return (
-    <div className="p-4 sm:p-6 max-w-6xl mx-auto">
-      <div className="flex flex-wrap items-center justify-between gap-2 mb-5">
+    <div className="p-6 max-w-6xl mx-auto">
+      <div className="flex items-center justify-between mb-5">
         <div>
           <h1 className="text-lg font-bold text-ink">Asset Registry</h1>
           <p className="text-xs text-ink-faint mt-0.5">All tracked organizational assets</p>
@@ -131,7 +131,7 @@ const Assets = () => {
       {canManage && (
         <form onSubmit={handleSubmit} className="card p-4 mb-6">
           <p className="panel-header mb-3">Register asset</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             <input type="text" placeholder="Asset Name" required value={newAsset.name}
               onChange={e => setNewAsset({ ...newAsset, name: e.target.value })} className="field" />
             <select required value={newAsset.categoryId}
