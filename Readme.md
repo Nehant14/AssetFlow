@@ -223,6 +223,6 @@ npm run dev
 
 <div align="center">
 
-Built for **[Hackathon Name]** · 2026
+Built for **Odoo Hackathon** · 2026
 
 </div>
