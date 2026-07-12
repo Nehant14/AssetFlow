@@ -1,10 +1,12 @@
 import axiosClient from './axiosClient';
 
-// Implement secure login using email and password[cite: 2]
+// Backend exposes POST /api/auth/signup (not /register) — new accounts are
+// always created with role "Employee"; elevation happens later via
+// PATCH /api/org/employees/:id/role (Admin only).
 export const login = (email, password) => {
   return axiosClient.post('/auth/login', { email, password });
 };
 
-export const register = (userData) => {
-  return axiosClient.post('/auth/register', userData);
+export const signup = (userData) => {
+  return axiosClient.post('/auth/signup', userData);
 };

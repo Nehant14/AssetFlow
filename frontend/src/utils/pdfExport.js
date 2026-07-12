@@ -15,7 +15,7 @@ export const exportTableToPDF = ({ title, columns, rows, filename }) => {
 
   doc.setFontSize(9);
   doc.setTextColor(120, 120, 120);
-  doc.text(`Generated ${new Date().toLocaleString()} · TransitOps`, 14, 22);
+  doc.text(`Generated ${new Date().toLocaleString()} · AssetFlow`, 14, 22);
 
   autoTable(doc, {
     startY: 28,
@@ -26,5 +26,5 @@ export const exportTableToPDF = ({ title, columns, rows, filename }) => {
     alternateRowStyles: { fillColor: [245, 247, 246] },
   });
 
-  doc.save(filename || `transitops-export-${new Date().toISOString().slice(0, 10)}.pdf`);
+  doc.save(filename || `assetflow-export-${new Date().toISOString().slice(0, 10)}.pdf`);
 };

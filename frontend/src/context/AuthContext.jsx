@@ -40,10 +40,10 @@ export const AuthProvider = ({ children }) => {
 
   // DEMO ONLY: logs in with a fake user and no backend call at all, so the
   // UI can be explored before a real backend exists. Data-driven pages
-  // (Vehicles, Drivers, Trips, etc.) will just show empty lists since there's
+  // (Assets, Bookings, etc.) will just show empty lists since there's
   // no API to fetch from. Remove this once a real backend is connected.
-  const loginDemo = (role = 'Fleet Manager') => {
-    const fakeUser = { id: 'demo-user', name: 'Demo User', email: 'demo@transitops.local', role };
+  const loginDemo = (role = 'Admin') => {
+    const fakeUser = { id: 'demo-user', name: 'Demo User', email: 'demo@assetflow.local', role };
     setUser(fakeUser);
     localStorage.setItem('token', 'demo-token');
     localStorage.setItem('user', JSON.stringify(fakeUser));
