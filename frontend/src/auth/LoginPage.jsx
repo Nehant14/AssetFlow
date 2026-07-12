@@ -30,44 +30,67 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <form onSubmit={handleSubmit} className="bg-white p-8 rounded-lg shadow-md w-96">
-        <h2 className="text-2xl font-bold mb-6 text-center text-slate-800">TransitOps Login</h2>
+    <div className="min-h-screen flex items-center justify-center bg-base-900 px-4">
+      <form onSubmit={handleSubmit} className="card w-full max-w-sm p-6">
+        <div className="text-center border-b border-line pb-5 mb-5">
+          <h2 className="text-sm font-bold tracking-wide text-ink">TransitOps — Sign in</h2>
+          <div className="mx-auto mt-4 w-12 h-12 rounded-full border border-line2 flex items-center justify-center text-sm font-bold font-mono text-accent">
+            TO
+          </div>
+        </div>
+
         <div className="mb-4">
-          <label className="block text-sm font-medium mb-1">Email</label>
-          <input 
-            type="email" 
-            required 
+          <label className="field-label">Email</label>
+          <input
+            type="email"
+            required
+            placeholder="name@company.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full border rounded p-2"
+            className="field w-full"
           />
         </div>
-        <div className="mb-6">
-          <label className="block text-sm font-medium mb-1">Password</label>
-          <input 
-            type="password" 
-            required 
+        <div className="mb-2">
+          <label className="field-label">Password</label>
+          <input
+            type="password"
+            required
+            placeholder="••••••••••"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full border rounded p-2"
+            className="field w-full"
           />
         </div>
-        {error && <p className="text-red-600 text-sm mb-4 text-center">{error}</p>}
-        <button type="submit" disabled={loading} className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 disabled:opacity-50">
-          {loading ? 'Signing in...' : 'Sign In'}
-        </button>
-        <p className="text-sm text-center text-gray-600 mt-4">
-          Don't have an account?{' '}
-          <a href="/signup" className="text-blue-600 hover:underline">Sign up</a>
-        </p>
+        <div className="text-right mb-5">
+          <a href="#" className="text-xs text-ink-faint hover:text-accent transition-colors">Forgot password</a>
+        </div>
 
-        <div className="mt-6 pt-4 border-t border-gray-200 text-center">
-          <p className="text-xs text-gray-400 mb-2">No backend running yet?</p>
+        {error && (
+          <p className="text-danger text-xs bg-danger-soft border border-danger/30 rounded-md px-3 py-2 mb-4 text-center">
+            {error}
+          </p>
+        )}
+
+        <button type="submit" disabled={loading} className="btn-primary w-full">
+          {loading ? 'Signing in…' : 'Sign In'}
+        </button>
+
+        <div className="mt-6 pt-5 border-t border-line">
+          <p className="text-xs text-ink-faint mb-1">New here?</p>
+          <p className="text-xs text-ink-dim mb-3">
+            Sign up creates an employee account — admin roles assigned later.
+          </p>
+          <a href="/signup" className="btn-secondary w-full block text-center">
+            Create Account
+          </a>
+        </div>
+
+        <div className="mt-5 pt-4 border-t border-line text-center">
+          <p className="text-[11px] text-ink-faint mb-2">No backend running yet?</p>
           <button
             type="button"
             onClick={handleDemoLogin}
-            className="w-full bg-slate-100 text-slate-700 py-2 rounded hover:bg-slate-200 text-sm"
+            className="w-full text-xs text-ink-dim bg-panel2 border border-line rounded-md py-2 hover:border-line2 transition-colors"
           >
             Explore in Demo Mode (no login required)
           </button>

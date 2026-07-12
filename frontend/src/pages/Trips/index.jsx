@@ -3,11 +3,11 @@ import { getVehicles } from '../../api/vehicles.api';
 import { getDrivers } from '../../api/drivers.api';
 import { getBookings, createBooking, cancelBooking, completeBooking } from '../../api/trips.api';
 
-const statusColor = {
-  Draft: 'bg-gray-200 text-gray-700',
-  Dispatched: 'bg-blue-100 text-blue-800',
-  Completed: 'bg-green-100 text-green-800',
-  Cancelled: 'bg-red-100 text-red-800',
+const statusBadge = {
+  Draft: 'badge-neutral',
+  Dispatched: 'badge-info',
+  Completed: 'badge-success',
+  Cancelled: 'badge-danger',
 };
 
 const emptyForm = {
@@ -115,72 +115,74 @@ const Trips = () => {
   };
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4 text-slate-800">Trip Management</h1>
+    <div className="p-6 max-w-6xl mx-auto">
+      <h1 className="text-lg font-bold text-ink mb-5">Trip Management</h1>
 
-      <h2 className="text-lg font-semibold mb-2">Create & Dispatch Trip</h2>
-      <form onSubmit={handleDispatch} className="bg-white p-4 rounded shadow-sm max-w-2xl mb-8 grid grid-cols-2 gap-3">
-        <input type="text" placeholder="Source" required value={formData.source}
-          onChange={(e) => setFormData({ ...formData, source: e.target.value })} className="border p-2 rounded" />
-        <input type="text" placeholder="Destination" required value={formData.destination}
-          onChange={(e) => setFormData({ ...formData, destination: e.target.value })} className="border p-2 rounded" />
-        <input type="number" placeholder="Cargo Weight (kg)" required value={formData.cargoWeight}
-          onChange={(e) => setFormData({ ...formData, cargoWeight: e.target.value })} className="border p-2 rounded" />
-        <input type="number" placeholder="Planned Distance (km)" required value={formData.plannedDistance}
-          onChange={(e) => setFormData({ ...formData, plannedDistance: e.target.value })} className="border p-2 rounded" />
+      <div className="card p-4 max-w-2xl mb-8">
+        <p className="panel-header mb-3">Create &amp; dispatch trip</p>
+        <form onSubmit={handleDispatch} className="grid grid-cols-2 gap-3">
+          <input type="text" placeholder="Source" required value={formData.source}
+            onChange={(e) => setFormData({ ...formData, source: e.target.value })} className="field" />
+          <input type="text" placeholder="Destination" required value={formData.destination}
+            onChange={(e) => setFormData({ ...formData, destination: e.target.value })} className="field" />
+          <input type="number" placeholder="Cargo Weight (kg)" required value={formData.cargoWeight}
+            onChange={(e) => setFormData({ ...formData, cargoWeight: e.target.value })} className="field" />
+          <input type="number" placeholder="Planned Distance (km)" required value={formData.plannedDistance}
+            onChange={(e) => setFormData({ ...formData, plannedDistance: e.target.value })} className="field" />
 
-        <select required value={formData.vehicleId} onChange={(e) => setFormData({ ...formData, vehicleId: e.target.value })} className="border p-2 rounded">
-          <option value="">Select Available Vehicle</option>
-          {vehicles.map(v => (
-            <option key={v.id} value={v.id}>{v.registrationNumber} (Max: {v.maxLoadCapacity}kg)</option>
-          ))}
-        </select>
+          <select required value={formData.vehicleId} onChange={(e) => setFormData({ ...formData, vehicleId: e.target.value })} className="field">
+            <option value="">Select Available Vehicle</option>
+            {vehicles.map(v => (
+              <option key={v.id} value={v.id}>{v.registrationNumber} (Max: {v.maxLoadCapacity}kg)</option>
+            ))}
+          </select>
 
-        <select required value={formData.driverId} onChange={(e) => setFormData({ ...formData, driverId: e.target.value })} className="border p-2 rounded">
-          <option value="">Select Available Driver</option>
-          {drivers.map(d => (
-            <option key={d.id} value={d.id}>{d.name} (License: {d.licenseNumber})</option>
-          ))}
-        </select>
+          <select required value={formData.driverId} onChange={(e) => setFormData({ ...formData, driverId: e.target.value })} className="field">
+            <option value="">Select Available Driver</option>
+            {drivers.map(d => (
+              <option key={d.id} value={d.id}>{d.name} (License: {d.licenseNumber})</option>
+            ))}
+          </select>
 
-        {error && <p className="text-red-600 text-sm col-span-2">{error}</p>}
-        <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 col-span-2">
-          Dispatch Trip
-        </button>
-      </form>
+          {error && <p className="text-danger text-xs col-span-2">{error}</p>}
+          <button type="submit" className="btn-primary col-span-2">
+            Dispatch Trip
+          </button>
+        </form>
+      </div>
 
-      <h2 className="text-lg font-semibold mb-2">All Trips</h2>
-      <div className="bg-white rounded shadow overflow-hidden">
-        <table className="w-full text-left border-collapse text-sm">
+      <p className="panel-header mb-2">All trips</p>
+      <div className="table-shell">
+        <table className="table-base">
           <thead>
-            <tr className="bg-gray-100 border-b">
-              <th className="p-3">Route</th>
-              <th className="p-3">Vehicle</th>
-              <th className="p-3">Driver</th>
-              <th className="p-3">Cargo</th>
-              <th className="p-3">Status</th>
-              <th className="p-3">Actions</th>
+            <tr>
+              <th>Route</th>
+              <th>Vehicle</th>
+              <th>Driver</th>
+              <th>Cargo</th>
+              <th>Status</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             {trips.length === 0 && (
-              <tr><td colSpan={6} className="p-4 text-center text-gray-500">No trips created yet.</td></tr>
+              <tr><td colSpan={6} className="p-4 text-center text-ink-faint">No trips created yet.</td></tr>
             )}
             {trips.map(t => (
-              <tr key={t.id} className="border-b">
-                <td className="p-3">{t.source} → {t.destination}</td>
-                <td className="p-3">{t.vehicleRegistrationNumber || t.vehicleId}</td>
-                <td className="p-3">{t.driverName || t.driverId}</td>
-                <td className="p-3">{t.cargoWeight} kg</td>
-                <td className="p-3"><span className={`badge ${statusColor[t.status] || 'bg-gray-100'}`}>{t.status}</span></td>
-                <td className="p-3 space-x-2">
+              <tr key={t.id}>
+                <td className="text-ink">{t.source} → {t.destination}</td>
+                <td className="font-mono">{t.vehicleRegistrationNumber || t.vehicleId}</td>
+                <td>{t.driverName || t.driverId}</td>
+                <td>{t.cargoWeight} kg</td>
+                <td><span className={`badge ${statusBadge[t.status] || 'badge-neutral'}`}>{t.status}</span></td>
+                <td className="space-x-3">
                   {t.status === 'Dispatched' && (
                     <>
-                      <button onClick={() => openCompleteModal(t)} className="text-green-700 text-sm hover:underline">Complete</button>
-                      <button onClick={() => handleCancel(t.id)} className="text-red-600 text-sm hover:underline">Cancel</button>
+                      <button onClick={() => openCompleteModal(t)} className="link-action">Complete</button>
+                      <button onClick={() => handleCancel(t.id)} className="link-action !text-danger">Cancel</button>
                     </>
                   )}
-                  {t.status !== 'Dispatched' && <span className="text-gray-400 text-sm">—</span>}
+                  {t.status !== 'Dispatched' && <span className="text-ink-faint text-sm">—</span>}
                 </td>
               </tr>
             ))}
@@ -189,21 +191,21 @@ const Trips = () => {
       </div>
 
       {completingTrip && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white rounded shadow-lg p-6 w-full max-w-sm">
-            <h3 className="font-semibold text-lg mb-4">Complete Trip: {completingTrip.source} → {completingTrip.destination}</h3>
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+          <div className="card p-6 w-full max-w-sm">
+            <h3 className="font-semibold text-ink mb-4">Complete Trip: {completingTrip.source} → {completingTrip.destination}</h3>
             <form onSubmit={handleComplete} className="flex flex-col gap-3">
               <input type="number" placeholder="Final Odometer Reading" required
                 value={completionData.finalOdometer}
                 onChange={e => setCompletionData({ ...completionData, finalOdometer: e.target.value })}
-                className="border p-2 rounded" />
+                className="field" />
               <input type="number" placeholder="Fuel Consumed (liters)" required
                 value={completionData.fuelConsumed}
                 onChange={e => setCompletionData({ ...completionData, fuelConsumed: e.target.value })}
-                className="border p-2 rounded" />
+                className="field" />
               <div className="flex justify-end gap-2 mt-2">
-                <button type="button" onClick={() => setCompletingTrip(null)} className="px-4 py-2 rounded border">Cancel</button>
-                <button type="submit" className="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700">Mark Completed</button>
+                <button type="button" onClick={() => setCompletingTrip(null)} className="btn-secondary">Cancel</button>
+                <button type="submit" className="btn-primary">Mark Completed</button>
               </div>
             </form>
           </div>

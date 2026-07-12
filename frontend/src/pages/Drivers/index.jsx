@@ -3,11 +3,11 @@ import { getDrivers, createDriver, updateDriverStatus } from '../../api/drivers.
 
 const STATUS_OPTIONS = ['Available', 'On Trip', 'Off Duty', 'Suspended'];
 
-const statusColor = {
-  Available: 'bg-green-100 text-green-800',
-  'On Trip': 'bg-blue-100 text-blue-800',
-  'Off Duty': 'bg-gray-200 text-gray-700',
-  Suspended: 'bg-red-100 text-red-800',
+const statusBadge = {
+  Available: 'badge-success',
+  'On Trip': 'badge-info',
+  'Off Duty': 'badge-neutral',
+  Suspended: 'badge-danger',
 };
 
 const emptyDriver = {
@@ -70,53 +70,59 @@ const Drivers = () => {
   };
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4 text-slate-800">Driver Management</h1>
+    <div className="p-6 max-w-6xl mx-auto">
+      <div className="flex items-center justify-between mb-5">
+        <h1 className="text-lg font-bold text-ink">Driver Management</h1>
+        <span className="text-xs text-ink-faint">{drivers.length} registered</span>
+      </div>
 
       {/* Maintain driver profiles: Name, License Number, License Category,
           License Expiry Date, Contact Number, Safety Score, and Status. */}
-      <form onSubmit={handleRegisterDriver} className="bg-white p-4 shadow rounded mb-6 grid grid-cols-2 md:grid-cols-3 gap-4">
-        <input type="text" placeholder="Name" required value={newDriver.name}
-          onChange={e => setNewDriver({ ...newDriver, name: e.target.value })} className="border p-2 rounded" />
-        <input type="text" placeholder="License Number" required value={newDriver.licenseNumber}
-          onChange={e => setNewDriver({ ...newDriver, licenseNumber: e.target.value })} className="border p-2 rounded" />
-        <input type="text" placeholder="License Category (e.g. LMV, HMV)" required value={newDriver.licenseCategory}
-          onChange={e => setNewDriver({ ...newDriver, licenseCategory: e.target.value })} className="border p-2 rounded" />
-        <input type="date" required value={newDriver.licenseExpiryDate}
-          onChange={e => setNewDriver({ ...newDriver, licenseExpiryDate: e.target.value })} className="border p-2 rounded" title="License Expiry Date" />
-        <input type="tel" placeholder="Contact Number" required value={newDriver.contactNumber}
-          onChange={e => setNewDriver({ ...newDriver, contactNumber: e.target.value })} className="border p-2 rounded" />
-        <input type="number" min="0" max="100" placeholder="Safety Score" value={newDriver.safetyScore}
-          onChange={e => setNewDriver({ ...newDriver, safetyScore: e.target.value })} className="border p-2 rounded" />
-        <button type="submit" disabled={loading} className="bg-blue-600 text-white p-2 rounded hover:bg-blue-700 disabled:opacity-50 md:col-span-3">
-          {loading ? 'Adding...' : 'Add Driver'}
+      <form onSubmit={handleRegisterDriver} className="card p-4 mb-6">
+        <p className="panel-header mb-3">Register driver</p>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          <input type="text" placeholder="Name" required value={newDriver.name}
+            onChange={e => setNewDriver({ ...newDriver, name: e.target.value })} className="field" />
+          <input type="text" placeholder="License Number" required value={newDriver.licenseNumber}
+            onChange={e => setNewDriver({ ...newDriver, licenseNumber: e.target.value })} className="field" />
+          <input type="text" placeholder="License Category (e.g. LMV, HMV)" required value={newDriver.licenseCategory}
+            onChange={e => setNewDriver({ ...newDriver, licenseCategory: e.target.value })} className="field" />
+          <input type="date" required value={newDriver.licenseExpiryDate}
+            onChange={e => setNewDriver({ ...newDriver, licenseExpiryDate: e.target.value })} className="field" title="License Expiry Date" />
+          <input type="tel" placeholder="Contact Number" required value={newDriver.contactNumber}
+            onChange={e => setNewDriver({ ...newDriver, contactNumber: e.target.value })} className="field" />
+          <input type="number" min="0" max="100" placeholder="Safety Score" value={newDriver.safetyScore}
+            onChange={e => setNewDriver({ ...newDriver, safetyScore: e.target.value })} className="field" />
+        </div>
+        <button type="submit" disabled={loading} className="btn-primary mt-3">
+          {loading ? 'Adding…' : 'Add Driver'}
         </button>
-        {error && <p className="text-red-600 text-sm md:col-span-3">{error}</p>}
+        {error && <p className="text-danger text-xs mt-3">{error}</p>}
       </form>
 
       {/* Driver List View */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {drivers.length === 0 && (
-          <p className="text-gray-500 col-span-full">No drivers registered yet.</p>
+          <p className="text-ink-faint text-sm col-span-full">No drivers registered yet.</p>
         )}
         {drivers.map(d => {
           const expired = isExpired(d.licenseExpiryDate);
           return (
-            <div key={d.id} className={`bg-white p-4 rounded shadow border-l-4 ${expired ? 'border-red-500' : 'border-blue-500'}`}>
-              <div className="flex justify-between items-start">
-                <h3 className="font-bold text-lg">{d.name}</h3>
-                <span className={`badge ${statusColor[d.status] || 'bg-gray-100 text-gray-700'}`}>{d.status}</span>
+            <div key={d.id} className={`card p-4 border-l-2 ${expired ? '!border-l-danger' : '!border-l-accent'}`}>
+              <div className="flex justify-between items-start mb-1">
+                <h3 className="font-semibold text-ink">{d.name}</h3>
+                <span className={`badge ${statusBadge[d.status] || 'badge-neutral'}`}>{d.status}</span>
               </div>
-              <p className="text-sm text-gray-600">License: {d.licenseNumber} ({d.licenseCategory})</p>
-              <p className={`text-sm ${expired ? 'text-red-600 font-semibold' : 'text-gray-600'}`}>
+              <p className="text-sm text-ink-dim">License: {d.licenseNumber} ({d.licenseCategory})</p>
+              <p className={`text-sm ${expired ? 'text-danger font-medium' : 'text-ink-dim'}`}>
                 Expiry: {d.licenseExpiryDate ? new Date(d.licenseExpiryDate).toLocaleDateString() : '—'}
                 {expired && ' (EXPIRED — cannot be dispatched)'}
               </p>
-              <p className="text-sm text-gray-600">Safety Score: {d.safetyScore ?? '—'}</p>
+              <p className="text-sm text-ink-dim">Safety Score: {d.safetyScore ?? '—'}</p>
               <select
                 value={d.status}
                 onChange={(e) => handleStatusChange(d.id, e.target.value)}
-                className="mt-2 border rounded p-1 text-sm w-full"
+                className="field w-full mt-3 text-sm"
               >
                 {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
               </select>

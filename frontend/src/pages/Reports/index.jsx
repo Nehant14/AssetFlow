@@ -66,46 +66,46 @@ const Reports = () => {
   };
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold text-slate-800">Reports & Analytics</h1>
+    <div className="p-6 max-w-6xl mx-auto">
+      <div className="flex justify-between items-center mb-5">
+        <h1 className="text-lg font-bold text-ink">Reports &amp; Analytics</h1>
         <button
           onClick={() => downloadCSV(rows)}
           disabled={!rows.length}
-          className="bg-slate-800 text-white px-4 py-2 rounded hover:bg-slate-900 disabled:opacity-40"
+          className="btn-secondary"
         >
           Export CSV
         </button>
       </div>
 
-      {loading && <p className="text-gray-500">Loading reports...</p>}
-      {error && <p className="text-red-600">{error}</p>}
+      {loading && <p className="text-ink-faint text-sm">Loading reports…</p>}
+      {error && <p className="text-danger text-sm">{error}</p>}
 
       {!loading && !error && (
-        <div className="bg-white rounded shadow overflow-hidden">
-          <table className="w-full text-left border-collapse text-sm">
+        <div className="table-shell">
+          <table className="table-base">
             <thead>
-              <tr className="bg-gray-100 border-b">
-                <th className="p-3">Vehicle</th>
-                <th className="p-3">Distance (km)</th>
-                <th className="p-3">Fuel Used (L)</th>
-                <th className="p-3">Fuel Efficiency (km/L)</th>
-                <th className="p-3">Operational Cost</th>
-                <th className="p-3">ROI (%)</th>
+              <tr>
+                <th>Vehicle</th>
+                <th>Distance (km)</th>
+                <th>Fuel Used (L)</th>
+                <th>Fuel Efficiency (km/L)</th>
+                <th>Operational Cost</th>
+                <th>ROI (%)</th>
               </tr>
             </thead>
             <tbody>
               {rows.length === 0 && (
-                <tr><td colSpan={6} className="p-4 text-center text-gray-500">No report data available yet.</td></tr>
+                <tr><td colSpan={6} className="p-4 text-center text-ink-faint">No report data available yet.</td></tr>
               )}
               {rows.map((r, i) => (
-                <tr key={r.vehicleId || i} className="border-b">
-                  <td className="p-3">{r.registrationNumber}</td>
-                  <td className="p-3">{r.distance}</td>
-                  <td className="p-3">{r.fuelUsed}</td>
-                  <td className="p-3">{r.fuelEfficiency}</td>
-                  <td className="p-3">₹{r.operationalCost}</td>
-                  <td className={`p-3 font-medium ${Number(r.roi) >= 0 ? 'text-green-700' : 'text-red-600'}`}>{r.roi}%</td>
+                <tr key={r.vehicleId || i}>
+                  <td className="font-mono text-ink">{r.registrationNumber}</td>
+                  <td>{r.distance}</td>
+                  <td>{r.fuelUsed}</td>
+                  <td>{r.fuelEfficiency}</td>
+                  <td>₹{r.operationalCost}</td>
+                  <td className={`font-medium ${Number(r.roi) >= 0 ? 'text-accent' : 'text-danger'}`}>{r.roi}%</td>
                 </tr>
               ))}
             </tbody>

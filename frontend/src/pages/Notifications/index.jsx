@@ -22,18 +22,18 @@ const Notifications = () => {
   };
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">System Alerts & Notifications</h1>
+    <div className="p-6 max-w-6xl mx-auto">
+      <h1 className="text-lg font-bold text-ink mb-5">System Alerts &amp; Notifications</h1>
       <div className="space-y-3">
-        {notifications.length === 0 && <p>No new notifications.</p>}
+        {notifications.length === 0 && <p className="text-ink-faint text-sm">No new notifications.</p>}
         {notifications.map(notif => (
-          <div key={notif.id} className="bg-white p-4 shadow rounded flex justify-between items-center border-l-4 border-yellow-500">
+          <div key={notif.id} className="card p-4 flex justify-between items-center border-l-2 !border-l-warn">
             <div>
-              {/* Used to display email reminders for expiring licenses or maintenance alerts[cite: 2] */}
-              <h3 className="font-semibold">{notif.title}</h3>
-              <p className="text-sm text-gray-600">{notif.message}</p>
+              {/* Used to display email reminders for expiring licenses or maintenance alerts */}
+              <h3 className="font-semibold text-ink text-sm">{notif.title}</h3>
+              <p className="text-sm text-ink-dim mt-0.5">{notif.message}</p>
             </div>
-            <button onClick={() => handleRead(notif.id)} className="text-blue-600 text-sm hover:underline">
+            <button onClick={() => handleRead(notif.id)} className="link-action shrink-0 ml-4">
               Mark as Read
             </button>
           </div>
