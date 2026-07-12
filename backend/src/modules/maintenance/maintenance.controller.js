@@ -1,4 +1,4 @@
-const prisma = require('../../config/db');
+const maintenanceService = require('./maintenance.service');
 
 async function raiseRequest(req, res) {
   try {
