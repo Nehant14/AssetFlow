@@ -1,109 +1,100 @@
-# TransitOps Frontend — Fixes & Additions
+# AssetFlow Frontend — Rebuilt to Match the Backend
 
-## New in this pass — full feature-list coverage
-Added the remaining Mandatory Deliverables and Bonus Features from the hackathon spec that
-weren't in the frontend yet. Anything that's inherently a backend responsibility (e.g. actually
-sending emails, storing uploaded files, computing KPIs) still needs a real endpoint — the UI below
-calls a sensible REST route for it and is ready to wire up.
+## Fix pass — login bug + responsiveness (this change)
 
-**RBAC (Role-Based Access Control)** — `src/auth/roles.js` is a single capability matrix for the
-four target roles (Fleet Manager, Driver, Safety Officer, Financial Analyst). `RoleRoute.jsx` gates
-whole routes; individual pages (Drivers, Trips, Maintenance, Reports) also hide/disable
-create-edit actions and export buttons per role. The Sidebar only renders links a role can access.
-Demo Mode on the login page now lets you pick a role to explore the app as.
+- **Critical bug fix:** `AuthContext.login()` read `response.data.user` /
+  `response.data.token`, but every backend response is wrapped as
+  `{ status, data: {...} }` (confirmed in `auth.service.js`'s `login()`,
+  which returns `{ token, user }` inside `data`). Every other API call in
+  this codebase already unwraps with `res.data?.data`; this one didn't, so
+  `user` and `token` were always `undefined` and login silently failed
+  (the string `"undefined"` was even being written to `localStorage` as the
+  token). Fixed to destructure `response.data.data`.
+- **Dead-endpoint calls removed:** `notifications.api.js` exported
+  `getNotifications()` and `markNotificationRead()`, and the Notifications
+  page called both, but `notification.routes.js` only mounts
+  `GET /dashboard-kpis` — there's no personal-inbox list or mark-as-read
+  route. Those calls (and the resulting 404s on every page load) were
+  removed; the Inbox panel now explains that only the KPI summary is
+  available from the API today, matching how Allocations/Maintenance/Audits
+  already handle backend gaps.
+- **Responsiveness:**
+  - The Sidebar was a fixed `w-64` column always rendered alongside the
+    content with no way to hide it, so on phone widths it ate over half the
+    screen. It's now an off-canvas drawer below the `md` breakpoint,
+    toggled by a hamburger button in the Navbar, with a backdrop and
+    auto-close on navigation. Desktop/tablet keeps the original inline
+    sidebar.
+  - `.table-shell` used `overflow-hidden`, which clipped table columns
+    instead of letting them scroll on narrow screens. Changed to
+    `overflow-x-auto` with a `min-w-[640px]` on `.table-base` so tables
+    scroll horizontally on mobile instead of losing data off the edge.
+  - Navbar: title truncates/shortens, non-essential items (role badge,
+    full name) hide below `sm`/`md`, and a hamburger button appears for the
+    new mobile drawer.
+  - Page containers use `p-4` instead of `p-6` below `sm`; a few forms that
+    were `grid-cols-2` at every width (Asset registration, New allocation,
+    audit cycle dates) now start at `grid-cols-1` and only go to 2+ columns
+    from `sm`/`md` up, so fields aren't cramped on ~320–375px screens. Page
+    header rows (`title + count`) now wrap instead of overflowing.
 
-**Dashboard & Reports charts** — `recharts` bar/pie/line charts added to Dashboard (KPI breakdown +
-fleet status split) and Reports (fuel efficiency by vehicle, ROI trend).
+## Original rebuild
 
-**PDF export** — `src/utils/pdfExport.js` (jsPDF + autotable) is a reusable "export this table to
-PDF" helper. Wired into Reports, Vehicle Registry, Driver Management, Trip Management, and Fuel &
-Expenses, alongside the existing CSV export on Reports.
+The frontend in this repo was originally built for a different problem
+statement (a vehicle fleet management app: Vehicles, Drivers, Trips, Fuel
+Expenses, License Reminders). The backend (`/backend`) implements a
+different domain entirely: an **enterprise asset management system** —
+Assets, Allocations, Transfers, Bookings, Maintenance, Audits, and
+Departments/Categories/Employees (see `backend/prisma/schema.prisma`).
 
-**Email reminders for expiring licenses** — new `pages/Reminders` page (routed at `/reminders`,
-Fleet Manager / Safety Officer only) lists drivers whose license expires within 30 days with a
-"Send reminder" / "Email All" action. Backend routes expected: `GET
-/notifications/expiring-licenses`, `POST /notifications/expiring-licenses/:id/send`, `POST
-/notifications/expiring-licenses/send-bulk` (`api/notifications.api.js`).
+This pass replaces the frontend's pages, API layer, and RBAC model so they
+match the backend's actual routes and data model, while keeping the same
+design system, layout shell, and reusable hooks/components
+(`components/common`, `hooks/useTableControls`, `utils/pdfExport`).
 
-**Vehicle document management** — new `pages/Vehicles/Documents.jsx` (routed at
-`/vehicles/documents`) tracks Registration Certificate / Insurance / Permit / PUC / Fitness
-documents per vehicle with expiry-status badges and file upload. Backend routes expected: `GET
-/vehicles/documents`, `POST /vehicles/:id/documents` (multipart), `DELETE
-/vehicles/:id/documents/:docId` (`api/vehicles.api.js`).
+## What changed
 
-**Search, filters, sorting** — `src/hooks/useTableControls.js` (generic client-side search + sort)
-and `SearchBox` / `SortableTh` in `components/common` are now used on Vehicles, Drivers, Trips,
-Maintenance, Fuel & Expenses, and Reports.
+- **API layer** (`src/api/`) — rewritten to call the real backend routes:
+  `assets.api.js`, `allocations.api.js`, `bookings.api.js`,
+  `maintenance.api.js`, `audits.api.js`, `organization.api.js`,
+  `notifications.api.js`, plus a corrected `auth.api.js` (`/auth/signup`,
+  not `/auth/register`). The old vehicle/driver/trip/fuel/report API files
+  were removed.
+- **RBAC** (`src/auth/roles.js`) — now uses the backend's real `Role` enum:
+  `Admin`, `AssetManager`, `DepartmentHead`, `Employee`. Most GET endpoints
+  in this backend are open to any authenticated user, so route-level
+  gating was relaxed; individual create/update forms and buttons are gated
+  per-page via `can(role, capability)`, matching where the backend actually
+  applies `restrictTo([...])`.
+- **Pages** (`src/pages/`) — Vehicles, Drivers, Trips, Fuel Expenses,
+  Reminders, and Reports were removed. In their place: Assets, Allocations,
+  Bookings, Maintenance, Audits, and Organization (Departments / Categories
+  / Employees, tabbed). Dashboard and Notifications were rewritten around
+  the real `GET /api/notifications/dashboard-kpis` payload.
+- **Layout & branding** — Sidebar, Navbar, Login/Signup pages relabeled
+  from "TransitOps" to "AssetFlow" with matching nav items.
 
-**Dark mode** — `src/context/ThemeContext.jsx` toggles a persisted light/dark theme (toggle button
-in the Navbar). The neutral palette in `tailwind.config.js` now reads from CSS variables
-(`src/index.css`) so existing utility classes (`bg-base-900`, `text-ink`, etc.) repaint for both
-themes without touching every component.
+## Known backend gaps this UI works around
 
----
+A few backend routes don't have a matching list/detail endpoint, so those
+pages derive what they can from data that *is* returned elsewhere, and are
+labeled accordingly in-app:
 
-## Critical build-breaking issues (app would not run at all before)
-- **Missing `vite.config.js`** — added, with the React plugin and a dev proxy to `/api`.
-- **Missing `tailwind.config.js` and `postcss.config.js`** — added. Every Tailwind class in the
-  codebase (`bg-white`, `shadow`, `rounded`, etc.) was doing nothing without these.
-- **Missing `src/index.css`** — `main.jsx` imported it but the file never existed.
-- **Missing `useAuth` hook** — `App.jsx` imported `{ useAuth }` from `context/AuthContext.jsx`,
-  but that file only exported `AuthContext`/`AuthProvider`. This crashed the app on load.
-  Added the hook.
-- **`AppRoutes.jsx` imported pages that no longer matched the folder names** (`AssetDirectory`,
-  `ResourceBooking`) — fixed to import the correct, renamed pages.
-- **`.env.example`** added for `VITE_API_URL`.
+- No `GET /api/allocations` — active allocations are derived from each
+  asset's nested `allocations` array (`GET /api/assets`).
+- No `GET /api/maintenance` — maintenance requests are derived the same way,
+  from each asset's nested maintenance requests.
+- No `GET /api/audits/cycles` (or any audit list) — the Audits page is
+  action-only (create cycle / record verification / close cycle) with a
+  session-local activity log, since there's nothing to fetch and display.
+- No `GET /api/notifications` (personal inbox) — only the dashboard KPI
+  aggregate exists, despite a `Notification` model in the schema.
 
-## Dead / disconnected code (features existed but were unreachable)
-The previous version had fully-written pages for **Driver Management** and **Fuel & Expense
-Management** sitting in oddly-named, unrouted folders (`OrganizationSetup`, `Audit`), so they
-were invisible in the running app. Renamed and wired up:
-- `pages/OrganizationSetup` → `pages/Drivers` → routed at `/drivers`
-- `pages/Audit` → `pages/FuelExpenses` → routed at `/fuel-expenses`
-- `pages/AssetDirectory` → `pages/Vehicles` → routed at `/vehicles`
-- `pages/ResourceBooking` → `pages/Trips` → routed at `/trips`
-- `api/assets.api.js` → `api/vehicles.api.js`
-- `api/bookings.api.js` → `api/trips.api.js`
-
-`Sidebar.jsx` linked to `/organization` and `/audits`, which were never valid routes — fixed to
-point at the real paths above.
-
-## Removed (out of spec, unused)
-- `pages/AllocationTransfer` and `api/allocations.api.js` — not part of the TransitOps spec and
-  not referenced by any route.
-- `api/audits.api.js` — unused dead file (unrelated to the actual fuel/expense feature).
-- The empty, unused duplicate `src/auth/AuthContext.jsx`.
-
-## Missing spec requirements added
-- **Reports & Analytics page** (`pages/Reports`, spec §3.8) — Fuel Efficiency, Fleet Utilization,
-  Operational Cost, Vehicle ROI, and **CSV export**. This section of the spec had no frontend
-  code at all before.
-- **Dashboard** was only showing 4 of the 7 required KPIs and had no filters — added the
-  remaining KPIs (Pending Trips, Drivers On Duty, Active Vehicles) and filters by vehicle type,
-  status, and region (spec §3.2).
-- **Trip Management** only had a create/dispatch form with no way to view existing trips or
-  Complete/Cancel them (spec §3.5 lifecycle: Draft → Dispatched → Completed/Cancelled) — added a
-  full trip list with a Complete modal (captures final odometer + fuel consumed) and Cancel action.
-- **Maintenance** only had a create form with no list or way to close a maintenance record —
-  vehicles would have stayed "In Shop" forever. Added a log list with a Close action.
-- **Vehicle Registry** form used uncontrolled inputs that never cleared after submit, and had no
-  way to ever set a vehicle to "Retired" even though that's one of the four required status
-  values — fixed both, and added error display for duplicate registration numbers.
-- **Driver Management** had no way to change a driver's status (e.g. to Suspended) and did not
-  visually flag expired licenses (a core business rule: expired-license drivers can't be
-  dispatched) — added both.
-- Added dedicated `api/drivers.api.js`, `api/fuel.api.js`, and `api/reports.api.js` modules
-  (previously several pages called `axiosClient` directly with no reusable API layer).
-- **Login/Signup** had no error handling shown to the user, and no navigation link between the
-  two pages — fixed both, and login now redirects to the dashboard on success.
-- **`App.jsx`** checked `localStorage.getItem('token')` directly instead of reading actual auth
-  state, so the sidebar/navbar wouldn't reliably appear/disappear on login/logout without a full
-  page refresh — now uses `useAuth()`.
-
-## Getting started
-```bash
-cd frontend
-npm install
-cp .env.example .env   # point at your backend
-npm run dev
-```
+Separately, several backend files reference fields/relations that don't
+match `schema.prisma` (e.g. `asset.controller.js` sets `assetTag` where the
+model field is `tag`; `maintenance.controller.js` currently exports audit
+logic instead of `raiseRequest`/`updateStatus`; `rbac.middleware.js`
+contains error-handler logic instead of a role-check function). Those are
+backend bugs, not something this frontend change fixes — flagging them here
+so they're not mistaken for a frontend integration issue if requests fail
+against a real running server.

@@ -1,5 +1,5 @@
 import axiosClient from './axiosClient';
 
-export const getMaintenanceLogs = () => axiosClient.get('/maintenance');
-export const createMaintenanceLog = (logData) => axiosClient.post('/maintenance', logData);
-export const closeMaintenanceLog = (id) => axiosClient.patch(`/maintenance/${id}/close`);
+export const getMaintenanceRequests = () => axiosClient.get('/maintenance');
+export const raiseMaintenanceRequest = (data) => axiosClient.post('/maintenance', data);
+export const updateMaintenanceStatus = (id, status) => axiosClient.patch(`/maintenance/${id}/status`, { status });

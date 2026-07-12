@@ -4,9 +4,13 @@ exports.createDepartment = async (req, res) => {
   try {
     const { name, headId, parentId } = req.body;
     const dept = await prisma.department.create({
-      data: { name, headId, parentId }
+      data: {
+        name,
+        headId: headId ? Number(headId) : undefined,
+        parentId: parentId ? Number(parentId) : undefined,
+      }
     });
-    // If promoted head, adjust user model role to Department_Head
+    // If promoted head, adjust user model role to DepartmentHead
     if (headId) {
       await prisma.user.update({ where: { id: Number(headId) }, data: { role: 'DepartmentHead' } });
     }

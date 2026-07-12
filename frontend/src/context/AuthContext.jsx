@@ -29,9 +29,15 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       const response = await apiLogin(email, password); // Secure login using email and password
-      setUser(response.data.user);
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
+      // Every backend response is wrapped as { status, data: {...} } — the
+      // rest of the app already unwraps with `res.data?.data`, but this call
+      // was reading `response.data.user`/`response.data.token` directly, one
+      // level too shallow, so `user` and `token` were always undefined and
+      // login silently "succeeded" while storing the string "undefined".
+      const { user: loggedInUser, token } = response.data?.data || {};
+      setUser(loggedInUser);
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(loggedInUser));
     } catch (error) {
       console.error("Login failed", error);
       throw error;
@@ -40,10 +46,10 @@ export const AuthProvider = ({ children }) => {
 
   // DEMO ONLY: logs in with a fake user and no backend call at all, so the
   // UI can be explored before a real backend exists. Data-driven pages
-  // (Vehicles, Drivers, Trips, etc.) will just show empty lists since there's
+  // (Assets, Bookings, etc.) will just show empty lists since there's
   // no API to fetch from. Remove this once a real backend is connected.
-  const loginDemo = (role = 'Fleet Manager') => {
-    const fakeUser = { id: 'demo-user', name: 'Demo User', email: 'demo@transitops.local', role };
+  const loginDemo = (role = 'Admin') => {
+    const fakeUser = { id: 'demo-user', name: 'Demo User', email: 'demo@assetflow.local', role };
     setUser(fakeUser);
     localStorage.setItem('token', 'demo-token');
     localStorage.setItem('user', JSON.stringify(fakeUser));

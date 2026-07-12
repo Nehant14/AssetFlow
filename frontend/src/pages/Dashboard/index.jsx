@@ -1,27 +1,22 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Truck, PackageCheck, Wrench, Route, Clock, Users, Gauge } from 'lucide-react';
+import { PackageCheck, ArrowLeftRight, CalendarClock, Wrench } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend,
 } from 'recharts';
-import axiosClient from '../../api/axiosClient';
-import { getVehicles } from '../../api/vehicles.api';
+import { getDashboardKPIs } from '../../api/notifications.api';
+import { getAssets } from '../../api/assets.api';
 
-const emptyKpis = {
-  activeVehicles: 0,
-  availableVehicles: 0,
-  vehiclesInMaintenance: 0,
-  activeTrips: 0,
-  pendingTrips: 0,
-  driversOnDuty: 0,
-  fleetUtilization: 0,
-};
+const emptyKpis = { totalAvailable: 0, totalAllocated: 0, activeBookings: 0, pendingMaint: 0 };
 
 const STATUS_COLORS = {
   Available: '#3ecf8e',
-  'On Trip': '#4fb2e8',
-  'In Shop': '#e8b64f',
+  Allocated: '#4fb2e8',
+  Reserved: '#9b8cf2',
+  UnderMaintenance: '#e8b64f',
+  Lost: '#e05d5d',
   Retired: '#66787c',
+  Disposed: '#66787c',
 };
 
 const StatTile = ({ label, value, suffix = '', icon }) => (
@@ -38,100 +33,48 @@ const StatTile = ({ label, value, suffix = '', icon }) => (
 
 const Dashboard = () => {
   const [kpis, setKpis] = useState(emptyKpis);
-  const [filters, setFilters] = useState({ vehicleType: '', status: '', region: '' });
+  const [assets, setAssets] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [vehicles, setVehicles] = useState([]);
 
   useEffect(() => {
-    fetchKPIs();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters]);
-
-  useEffect(() => {
-    getVehicles().then((res) => setVehicles(res.data || [])).catch((err) => console.error('Failed to fetch vehicles for charts', err));
+    fetchAll();
   }, []);
 
-  const fetchKPIs = async () => {
+  const fetchAll = async () => {
     setLoading(true);
     try {
-      const params = {};
-      if (filters.vehicleType) params.vehicleType = filters.vehicleType;
-      if (filters.status) params.status = filters.status;
-      if (filters.region) params.region = filters.region;
-
-      // Display KPIs such as Active Vehicles, Available Vehicles, Vehicles in
-      // Maintenance, Active Trips, Pending Trips, Drivers On Duty, and Fleet
-      // Utilization (%), filterable by vehicle type, status, and region.
-      const response = await axiosClient.get('/dashboard/kpis', { params });
-      setKpis({ ...emptyKpis, ...response.data });
+      const [kpiRes, assetsRes] = await Promise.all([getDashboardKPIs(), getAssets()]);
+      setKpis({ ...emptyKpis, ...(kpiRes.data?.data || kpiRes.data) });
+      setAssets(assetsRes.data?.data || assetsRes.data || []);
     } catch (err) {
-      console.error('Failed to fetch dashboard KPIs', err);
+      console.error('Failed to fetch dashboard data', err);
     } finally {
       setLoading(false);
     }
   };
 
-  const hasFilters = filters.vehicleType || filters.status || filters.region;
-
-  // Bonus feature: Charts and visual analytics
   const kpiChartData = useMemo(() => ([
-    { name: 'Active', value: kpis.activeVehicles },
-    { name: 'Available', value: kpis.availableVehicles },
-    { name: 'In Shop', value: kpis.vehiclesInMaintenance },
-    { name: 'Active Trips', value: kpis.activeTrips },
-    { name: 'Pending Trips', value: kpis.pendingTrips },
-    { name: 'Drivers On Duty', value: kpis.driversOnDuty },
+    { name: 'Available', value: kpis.totalAvailable },
+    { name: 'Allocated', value: kpis.totalAllocated },
+    { name: 'Active Bookings', value: kpis.activeBookings },
+    { name: 'Pending Maintenance', value: kpis.pendingMaint },
   ]), [kpis]);
 
   const statusPieData = useMemo(() => {
-    const counts = vehicles.reduce((acc, v) => {
-      acc[v.status] = (acc[v.status] || 0) + 1;
+    const counts = assets.reduce((acc, a) => {
+      acc[a.status] = (acc[a.status] || 0) + 1;
       return acc;
     }, {});
     return Object.entries(counts).map(([name, value]) => ({ name, value }));
-  }, [vehicles]);
+  }, [assets]);
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <div className="flex items-center justify-between mb-5">
+    <div className="p-4 sm:p-6 max-w-6xl mx-auto">
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-5">
         <div>
           <h1 className="text-lg font-bold text-ink">Today's Overview</h1>
-          <p className="text-xs text-ink-faint mt-0.5">Live fleet status across your operation</p>
+          <p className="text-xs text-ink-faint mt-0.5">Live asset status across your organization</p>
         </div>
-      </div>
-
-      {/* Filters */}
-      <div className="card p-4 mb-5 flex flex-wrap gap-4 items-end">
-        <div>
-          <label className="field-label">Vehicle Type</label>
-          <select value={filters.vehicleType} onChange={e => setFilters({ ...filters, vehicleType: e.target.value })} className="field">
-            <option value="">All Types</option>
-            <option value="Truck">Truck</option>
-            <option value="Van">Van</option>
-            <option value="Trailer">Trailer</option>
-            <option value="Bike">Bike</option>
-          </select>
-        </div>
-        <div>
-          <label className="field-label">Status</label>
-          <select value={filters.status} onChange={e => setFilters({ ...filters, status: e.target.value })} className="field">
-            <option value="">All Statuses</option>
-            <option value="Available">Available</option>
-            <option value="On Trip">On Trip</option>
-            <option value="In Shop">In Shop</option>
-            <option value="Retired">Retired</option>
-          </select>
-        </div>
-        <div>
-          <label className="field-label">Region</label>
-          <input type="text" placeholder="e.g. North Zone" value={filters.region}
-            onChange={e => setFilters({ ...filters, region: e.target.value })} className="field" />
-        </div>
-        {hasFilters && (
-          <button onClick={() => setFilters({ vehicleType: '', status: '', region: '' })} className="link-action">
-            Clear filters
-          </button>
-        )}
       </div>
 
       {loading ? (
@@ -139,16 +82,12 @@ const Dashboard = () => {
       ) : (
         <>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <StatTile label="Active Vehicles" value={kpis.activeVehicles} icon={<Truck size={16} />} />
-            <StatTile label="Available Vehicles" value={kpis.availableVehicles} icon={<PackageCheck size={16} />} />
-            <StatTile label="In Maintenance" value={kpis.vehiclesInMaintenance} icon={<Wrench size={16} />} />
-            <StatTile label="Active Trips" value={kpis.activeTrips} icon={<Route size={16} />} />
-            <StatTile label="Pending Trips" value={kpis.pendingTrips} icon={<Clock size={16} />} />
-            <StatTile label="Drivers On Duty" value={kpis.driversOnDuty} icon={<Users size={16} />} />
-            <StatTile label="Fleet Utilization" value={kpis.fleetUtilization} suffix="%" icon={<Gauge size={16} />} />
+            <StatTile label="Available Assets" value={kpis.totalAvailable} icon={<PackageCheck size={16} />} />
+            <StatTile label="Allocated Assets" value={kpis.totalAllocated} icon={<ArrowLeftRight size={16} />} />
+            <StatTile label="Active Bookings" value={kpis.activeBookings} icon={<CalendarClock size={16} />} />
+            <StatTile label="Pending Maintenance" value={kpis.pendingMaint} icon={<Wrench size={16} />} />
           </div>
 
-          {/* Bonus feature: charts and visual analytics */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <div className="card p-4 md:col-span-2">
               <p className="panel-header mb-3">Operational KPI breakdown</p>
@@ -163,9 +102,9 @@ const Dashboard = () => {
               </ResponsiveContainer>
             </div>
             <div className="card p-4">
-              <p className="panel-header mb-3">Fleet status split</p>
+              <p className="panel-header mb-3">Asset status split</p>
               {statusPieData.length === 0 ? (
-                <p className="text-ink-faint text-sm">No vehicle data yet.</p>
+                <p className="text-ink-faint text-sm">No asset data yet.</p>
               ) : (
                 <ResponsiveContainer width="100%" height={220}>
                   <PieChart>
@@ -182,23 +121,23 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {kpis.vehiclesInMaintenance > 0 && (
+          {kpis.pendingMaint > 0 && (
             <div className="card border-warn/30 bg-warn-soft px-4 py-3 mb-6 flex items-center justify-between">
               <p className="text-sm text-warn">
-                {kpis.vehiclesInMaintenance} vehicle{kpis.vehiclesInMaintenance === 1 ? '' : 's'} currently in the shop — flagged for follow-up.
+                {kpis.pendingMaint} maintenance request{kpis.pendingMaint === 1 ? '' : 's'} pending review.
               </p>
               <a href="/maintenance" className="link-action">Review maintenance →</a>
             </div>
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <a href="/vehicles" className="card p-4 hover:border-accent/40 transition-colors">
-              <p className="text-sm font-semibold text-ink">+ Register vehicle</p>
-              <p className="text-xs text-ink-faint mt-1">Add a new vehicle to the registry</p>
+            <a href="/assets" className="card p-4 hover:border-accent/40 transition-colors">
+              <p className="text-sm font-semibold text-ink">+ Register asset</p>
+              <p className="text-xs text-ink-faint mt-1">Add a new asset to the registry</p>
             </a>
-            <a href="/trips" className="card p-4 hover:border-accent/40 transition-colors">
-              <p className="text-sm font-semibold text-ink">Book resource</p>
-              <p className="text-xs text-ink-faint mt-1">Dispatch a vehicle and driver on a trip</p>
+            <a href="/bookings" className="card p-4 hover:border-accent/40 transition-colors">
+              <p className="text-sm font-semibold text-ink">Book a resource</p>
+              <p className="text-xs text-ink-faint mt-1">Reserve time on a shared, bookable asset</p>
             </a>
             <a href="/maintenance" className="card p-4 hover:border-accent/40 transition-colors">
               <p className="text-sm font-semibold text-ink">Raise request</p>

@@ -1,7 +1,7 @@
 import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { ALL_ROLES } from '../auth/roles';
+import { ALL_ROLES } from './roles';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -35,9 +35,9 @@ const LoginPage = () => {
     <div className="min-h-screen flex items-center justify-center bg-base-900 px-4">
       <form onSubmit={handleSubmit} className="card w-full max-w-sm p-6">
         <div className="text-center border-b border-line pb-5 mb-5">
-          <h2 className="text-sm font-bold tracking-wide text-ink">TransitOps — Sign in</h2>
+          <h2 className="text-sm font-bold tracking-wide text-ink">AssetFlow — Sign in</h2>
           <div className="mx-auto mt-4 w-12 h-12 rounded-full border border-line2 flex items-center justify-center text-sm font-bold font-mono text-accent">
-            TO
+            AF
           </div>
         </div>
 
@@ -80,7 +80,7 @@ const LoginPage = () => {
         <div className="mt-6 pt-5 border-t border-line">
           <p className="text-xs text-ink-faint mb-1">New here?</p>
           <p className="text-xs text-ink-dim mb-3">
-            Sign up creates an employee account — admin roles assigned later.
+            Sign up creates an Employee account — Admins elevate roles later.
           </p>
           <a href="/signup" className="btn-secondary w-full block text-center">
             Create Account

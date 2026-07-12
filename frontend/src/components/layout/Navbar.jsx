@@ -1,10 +1,10 @@
 import React, { useContext } from 'react';
-import { Sun, Moon } from 'lucide-react';
+import { Sun, Moon, Menu } from 'lucide-react';
 import { AuthContext } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { Link } from 'react-router-dom';
 
-const Navbar = () => {
+const Navbar = ({ onMenuClick }) => {
   const { user, logout } = useContext(AuthContext);
   const { theme, toggleTheme } = useTheme();
 
@@ -16,11 +16,22 @@ const Navbar = () => {
     .toUpperCase();
 
   return (
-    <header className="h-16 shrink-0 bg-base-800 border-b border-line flex items-center justify-between px-6">
-      <h2 className="text-sm font-semibold text-ink">
-        Transport Operations Platform
-      </h2>
-      <div className="flex items-center gap-4">
+    <header className="h-16 shrink-0 bg-base-800 border-b border-line flex items-center justify-between gap-2 px-3 sm:px-6">
+      <div className="flex items-center gap-2 min-w-0">
+        {/* Hamburger: only shown below md, where the Sidebar becomes a drawer */}
+        <button
+          onClick={onMenuClick}
+          aria-label="Toggle navigation menu"
+          className="md:hidden w-8 h-8 shrink-0 rounded-md bg-panel2 border border-line flex items-center justify-center text-ink-dim hover:text-accent hover:border-accent/30 transition-colors"
+        >
+          <Menu size={16} />
+        </button>
+        <h2 className="text-sm font-semibold text-ink truncate">
+          <span className="hidden sm:inline">AssetFlow — Enterprise Asset Management</span>
+          <span className="sm:hidden">AssetFlow</span>
+        </h2>
+      </div>
+      <div className="flex items-center gap-2 sm:gap-4 shrink-0">
         <button
           onClick={toggleTheme}
           title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
@@ -28,18 +39,18 @@ const Navbar = () => {
         >
           {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
         </button>
-        <Link to="/notifications" className="badge badge-info hover:opacity-80 transition-opacity">
-          {user?.role || 'Fleet Manager'}
+        <Link to="/notifications" className="badge badge-info hover:opacity-80 transition-opacity hidden sm:inline-flex">
+          {user?.role || 'Employee'}
         </Link>
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-full bg-panel2 border border-line flex items-center justify-center text-xs font-semibold text-ink-dim">
+          <div className="w-8 h-8 rounded-full bg-panel2 border border-line flex items-center justify-center text-xs font-semibold text-ink-dim shrink-0">
             {initials}
           </div>
-          <span className="text-sm text-ink-dim hidden sm:inline">{user?.name || user?.email}</span>
+          <span className="text-sm text-ink-dim hidden md:inline">{user?.name || user?.email}</span>
         </div>
         <button
           onClick={logout}
-          className="text-xs font-medium bg-danger-soft text-danger border border-danger/30 px-3 py-1.5 rounded-md hover:bg-danger/20 transition-colors"
+          className="text-xs font-medium bg-danger-soft text-danger border border-danger/30 px-2.5 sm:px-3 py-1.5 rounded-md hover:bg-danger/20 transition-colors"
         >
           Logout
         </button>
