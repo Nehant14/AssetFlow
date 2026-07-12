@@ -12,7 +12,11 @@ exports.updateEmployeeRole = async (req, res) => {
     const { role, departmentId, status } = req.body;
     const updated = await prisma.user.update({
       where: { id: Number(id) },
-      data: { role, departmentId, status }
+      data: {
+        role,
+        departmentId: departmentId ? Number(departmentId) : null,
+        status
+      }
     });
     res.status(200).json({ status: 'success', data: updated });
   } catch (err) { res.status(400).json({ status: 'error', message: err.message }); }

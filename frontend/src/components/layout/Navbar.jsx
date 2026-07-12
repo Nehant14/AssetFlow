@@ -18,7 +18,7 @@ const Navbar = () => {
   return (
     <header className="h-16 shrink-0 bg-base-800 border-b border-line flex items-center justify-between px-6">
       <h2 className="text-sm font-semibold text-ink">
-        Transport Operations Platform
+        AssetFlow — Enterprise Asset Management
       </h2>
       <div className="flex items-center gap-4">
         <button
@@ -29,7 +29,7 @@ const Navbar = () => {
           {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
         </button>
         <Link to="/notifications" className="badge badge-info hover:opacity-80 transition-opacity">
-          {user?.role || 'Fleet Manager'}
+          {user?.role || 'Employee'}
         </Link>
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-full bg-panel2 border border-line flex items-center justify-center text-xs font-semibold text-ink-dim">
