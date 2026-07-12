@@ -1,12 +1,25 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ===== MODELS ===== //
+
 model User {
-  id           Int      @id @default(autoincrement())
+  id           Int         @id @default(autoincrement())
   name         String
-  email        String   @unique
+  email        String      @unique
   password     String
-  role         String   // Employee | DepartmentHead | AssetManager | Admin
+  role         String      @default("Employee")
   departmentId Int?
   department   Department? @relation(fields: [departmentId], references: [id])
-  status       String   @default("Active")
+  status       String      @default("Active")
+  createdAt    DateTime    @default(now())
 }
 
 model Department {
@@ -24,18 +37,20 @@ model Category {
 
 model Asset {
   id          Int      @id @default(autoincrement())
-  tag         String   @unique   // AF-0001
+  tag         String   @unique
   name        String
   categoryId  Int
   category    Category @relation(fields: [categoryId], references: [id])
-  condition   String
+  condition   String   @default("Good")
   location    String
-  status      String   @default("Available") // Available|Allocated|Reserved|UnderMaintenance|Lost|Retired|Disposed
+  status      String   @default("Available")
   isBookable  Boolean  @default(false)
-  allocations Allocation[]
-  bookings    Booking[]
+  createdAt   DateTime @default(now())
+
+  allocations         Allocation[]
+  bookings            Booking[]
   maintenanceRequests MaintenanceRequest[]
-  auditItems  AuditItem[]
+  auditItems          AuditItem[]
 }
 
 model Allocation {
@@ -46,36 +61,36 @@ model Allocation {
   allocatedAt        DateTime  @default(now())
   expectedReturnDate DateTime?
   returnedAt         DateTime?
-  status             String    @default("active") // active|returned
+  status             String    @default("active")
 }
 
 model Booking {
-  id         Int      @id @default(autoincrement())
-  assetId    Int
-  asset      Asset    @relation(fields: [assetId], references: [id])
-  bookedBy   Int
-  startTime  DateTime
-  endTime    DateTime
-  status     String   @default("Upcoming") // Upcoming|Ongoing|Completed|Cancelled
+  id        Int      @id @default(autoincrement())
+  assetId   Int
+  asset     Asset    @relation(fields: [assetId], references: [id])
+  bookedBy  Int
+  startTime DateTime
+  endTime   DateTime
+  status    String   @default("Upcoming")
 }
 
 model MaintenanceRequest {
-  id          Int      @id @default(autoincrement())
-  assetId     Int
-  asset       Asset    @relation(fields: [assetId], references: [id])
-  raisedBy    Int
-  issue       String
-  priority    String
-  status      String   @default("Pending") // Pending|Approved|Rejected|Resolved
+  id       Int    @id @default(autoincrement())
+  assetId  Int
+  asset    Asset  @relation(fields: [assetId], references: [id])
+  raisedBy Int
+  issue    String
+  priority String @default("Medium")
+  status   String @default("Pending")
 }
 
 model AuditCycle {
-  id          Int      @id @default(autoincrement())
-  department  String
-  startDate   DateTime
-  endDate     DateTime
-  status      String   @default("Open") // Open|Closed
-  items       AuditItem[]
+  id         Int         @id @default(autoincrement())
+  department String
+  startDate  DateTime
+  endDate    DateTime
+  status     String      @default("Open")
+  items      AuditItem[]
 }
 
 model AuditItem {
@@ -84,12 +99,13 @@ model AuditItem {
   auditCycle   AuditCycle @relation(fields: [auditCycleId], references: [id])
   assetId      Int
   asset        Asset      @relation(fields: [assetId], references: [id])
-  result       String?    // Verified|Missing|Damaged
+  result       String?
 }
 
 model Notification {
-  id      Int     @id @default(autoincrement())
-  userId  Int
-  message String
-  isRead  Boolean @default(false)
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
 }
