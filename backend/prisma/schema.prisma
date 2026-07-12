@@ -1,0 +1,95 @@
+model User {
+  id           Int      @id @default(autoincrement())
+  name         String
+  email        String   @unique
+  password     String
+  role         String   // Employee | DepartmentHead | AssetManager | Admin
+  departmentId Int?
+  department   Department? @relation(fields: [departmentId], references: [id])
+  status       String   @default("Active")
+}
+
+model Department {
+  id     Int    @id @default(autoincrement())
+  name   String
+  status String @default("Active")
+  users  User[]
+}
+
+model Category {
+  id     Int     @id @default(autoincrement())
+  name   String
+  assets Asset[]
+}
+
+model Asset {
+  id          Int      @id @default(autoincrement())
+  tag         String   @unique   // AF-0001
+  name        String
+  categoryId  Int
+  category    Category @relation(fields: [categoryId], references: [id])
+  condition   String
+  location    String
+  status      String   @default("Available") // Available|Allocated|Reserved|UnderMaintenance|Lost|Retired|Disposed
+  isBookable  Boolean  @default(false)
+  allocations Allocation[]
+  bookings    Booking[]
+  maintenanceRequests MaintenanceRequest[]
+  auditItems  AuditItem[]
+}
+
+model Allocation {
+  id                 Int       @id @default(autoincrement())
+  assetId            Int
+  asset              Asset     @relation(fields: [assetId], references: [id])
+  employeeId         Int
+  allocatedAt        DateTime  @default(now())
+  expectedReturnDate DateTime?
+  returnedAt         DateTime?
+  status             String    @default("active") // active|returned
+}
+
+model Booking {
+  id         Int      @id @default(autoincrement())
+  assetId    Int
+  asset      Asset    @relation(fields: [assetId], references: [id])
+  bookedBy   Int
+  startTime  DateTime
+  endTime    DateTime
+  status     String   @default("Upcoming") // Upcoming|Ongoing|Completed|Cancelled
+}
+
+model MaintenanceRequest {
+  id          Int      @id @default(autoincrement())
+  assetId     Int
+  asset       Asset    @relation(fields: [assetId], references: [id])
+  raisedBy    Int
+  issue       String
+  priority    String
+  status      String   @default("Pending") // Pending|Approved|Rejected|Resolved
+}
+
+model AuditCycle {
+  id          Int      @id @default(autoincrement())
+  department  String
+  startDate   DateTime
+  endDate     DateTime
+  status      String   @default("Open") // Open|Closed
+  items       AuditItem[]
+}
+
+model AuditItem {
+  id           Int        @id @default(autoincrement())
+  auditCycleId Int
+  auditCycle   AuditCycle @relation(fields: [auditCycleId], references: [id])
+  assetId      Int
+  asset        Asset      @relation(fields: [assetId], references: [id])
+  result       String?    // Verified|Missing|Damaged
+}
+
+model Notification {
+  id      Int     @id @default(autoincrement())
+  userId  Int
+  message String
+  isRead  Boolean @default(false)
+}
