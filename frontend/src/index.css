@@ -6,9 +6,39 @@ html, body, #root {
   height: 100%;
 }
 
+/* ---- Theme tokens (RGB triplets so Tailwind can apply alpha) ---- */
+:root {
+  --c-base-950: 10 12 13;
+  --c-base-900: 13 16 17;
+  --c-base-800: 19 23 24;
+  --c-base-700: 24 29 31;
+  --c-panel: 20 24 25;
+  --c-panel2: 25 31 33;
+  --c-line: 38 45 47;
+  --c-line2: 51 60 63;
+  --c-ink: 230 235 236;
+  --c-ink-dim: 154 167 170;
+  --c-ink-faint: 102 120 124;
+}
+
+/* Light theme override, toggled by adding class="light" to <html> */
+html.light {
+  --c-base-950: 255 255 255;
+  --c-base-900: 246 247 248;
+  --c-base-800: 255 255 255;
+  --c-base-700: 237 239 240;
+  --c-panel: 255 255 255;
+  --c-panel2: 244 245 246;
+  --c-line: 224 227 229;
+  --c-line2: 203 208 211;
+  --c-ink: 20 24 25;
+  --c-ink-dim: 90 102 105;
+  --c-ink-faint: 130 142 145;
+}
+
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  @apply bg-base-900 text-ink;
+  @apply bg-base-900 text-ink transition-colors duration-150;
 }
 
 /* Thin, dark scrollbars to match the console aesthetic */

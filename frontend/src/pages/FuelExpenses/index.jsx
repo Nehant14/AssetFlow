@@ -1,6 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { getFuelLogs, createFuelLog, getExpenses, createExpense } from '../../api/fuel.api';
 import { getVehicles } from '../../api/vehicles.api';
+import { SearchBox } from '../../components/common';
+import useTableControls from '../../hooks/useTableControls';
+import { exportTableToPDF } from '../../utils/pdfExport';
 
 const emptyLog = { vehicleId: '', type: 'Fuel', liters: '', cost: '', date: '' };
 
@@ -71,6 +75,38 @@ const FuelExpenses = () => {
     totalsByVehicle[e.vehicleId] = (totalsByVehicle[e.vehicleId] || 0) + Number(e.cost || 0);
   });
 
+  // Bonus feature: charts and visual analytics
+  const chartData = useMemo(
+    () => Object.entries(totalsByVehicle).map(([vehicleId, total]) => ({
+      name: regNo(vehicleId),
+      total: Number(total.toFixed(2)),
+    })),
+    [totalsByVehicle, vehicles]
+  );
+
+  const allEntries = [...fuelLogs.map(f => ({ ...f, type: 'Fuel' })), ...expenses]
+    .map(e => ({ ...e, vehicleRegistrationNumber: regNo(e.vehicleId) }));
+
+  // Bonus feature: search, filters, sorting
+  const { search, setSearch, sortKey, sortDir, toggleSort, result } = useTableControls(
+    allEntries, ['vehicleRegistrationNumber', 'type']
+  );
+
+  const handleExportPDF = () => {
+    exportTableToPDF({
+      title: 'TransitOps — Fuel & Expense Log',
+      filename: `fuel-expenses-${new Date().toISOString().slice(0, 10)}.pdf`,
+      columns: [
+        { header: 'Vehicle', key: 'vehicleRegistrationNumber' },
+        { header: 'Type', key: 'type' },
+        { header: 'Liters', key: 'liters', format: (r) => r.liters ?? '—' },
+        { header: 'Cost', key: 'cost', format: (r) => `Rs. ${Number(r.cost || 0).toFixed(2)}` },
+        { header: 'Date', key: 'date', format: (r) => r.date ? new Date(r.date).toLocaleDateString() : '—' },
+      ],
+      rows: result,
+    });
+  };
+
   return (
     <div className="p-6 max-w-6xl mx-auto">
       <h1 className="text-lg font-bold text-ink mb-5">Fuel &amp; Expense Management</h1>
@@ -107,7 +143,7 @@ const FuelExpenses = () => {
       <div className="card p-4 mb-6">
         <p className="panel-header mb-3">Operational cost by vehicle</p>
         {Object.keys(totalsByVehicle).length === 0 && <p className="text-ink-faint text-sm">No entries logged yet.</p>}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
           {Object.entries(totalsByVehicle).map(([vehicleId, total]) => (
             <div key={vehicleId} className="border border-line rounded-md p-3 bg-panel2">
               <p className="text-xs text-ink-faint">{regNo(vehicleId)}</p>
@@ -115,23 +151,42 @@ const FuelExpenses = () => {
             </div>
           ))}
         </div>
+        {/* Bonus feature: charts and visual analytics */}
+        {chartData.length > 0 && (
+          <ResponsiveContainer width="100%" height={200}>
+            <BarChart data={chartData} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#262d2f" />
+              <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#66787c' }} />
+              <YAxis tick={{ fontSize: 10, fill: '#66787c' }} />
+              <Tooltip contentStyle={{ background: '#191f21', border: '1px solid #262d2f', fontSize: 12 }} />
+              <Bar dataKey="total" fill="#e8b64f" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        )}
       </div>
 
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+        <SearchBox value={search} onChange={setSearch} placeholder="Search vehicle, type…" />
+        <button onClick={handleExportPDF} disabled={!result.length} className="btn-secondary">Export PDF</button>
+      </div>
       <div className="table-shell">
         <table className="table-base">
           <thead>
             <tr>
-              <th>Vehicle</th>
-              <th>Type</th>
+              <th onClick={() => toggleSort('vehicleRegistrationNumber')} className="cursor-pointer">Vehicle</th>
+              <th onClick={() => toggleSort('type')} className="cursor-pointer">Type</th>
               <th>Liters</th>
-              <th>Cost</th>
-              <th>Date</th>
+              <th onClick={() => toggleSort('cost')} className="cursor-pointer">Cost</th>
+              <th onClick={() => toggleSort('date')} className="cursor-pointer">Date</th>
             </tr>
           </thead>
           <tbody>
-            {[...fuelLogs.map(f => ({ ...f, type: 'Fuel' })), ...expenses].map((entry, idx) => (
+            {result.length === 0 && (
+              <tr><td colSpan={5} className="p-4 text-center text-ink-faint">No entries match your search.</td></tr>
+            )}
+            {result.map((entry, idx) => (
               <tr key={idx}>
-                <td className="font-mono">{regNo(entry.vehicleId)}</td>
+                <td className="font-mono">{entry.vehicleRegistrationNumber}</td>
                 <td>{entry.type}</td>
                 <td>{entry.liters ?? '—'}</td>
                 <td>₹{Number(entry.cost || 0).toFixed(2)}</td>

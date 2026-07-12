@@ -1,5 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { FileText } from 'lucide-react';
 import { getVehicles, createVehicle, updateVehicleStatus } from '../../api/vehicles.api';
+import { SearchBox, SortableTh } from '../../components/common';
+import useTableControls from '../../hooks/useTableControls';
+import { exportTableToPDF } from '../../utils/pdfExport';
 
 const statusBadge = {
   Available: 'badge-success',
@@ -23,6 +28,13 @@ const Vehicles = () => {
   const [newVehicle, setNewVehicle] = useState(emptyVehicle);
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [statusFilter, setStatusFilter] = useState('');
+
+  // Bonus feature: search, filters, and sorting
+  const { search, setSearch, sortKey, sortDir, toggleSort, result } = useTableControls(
+    vehicles.filter(v => !statusFilter || v.status === statusFilter),
+    ['registrationNumber', 'name', 'type']
+  );
 
   useEffect(() => {
     fetchVehicles();
@@ -63,11 +75,31 @@ const Vehicles = () => {
     }
   };
 
+  const handleExportPDF = () => {
+    exportTableToPDF({
+      title: 'TransitOps — Vehicle Registry',
+      filename: `vehicle-registry-${new Date().toISOString().slice(0, 10)}.pdf`,
+      columns: [
+        { header: 'Reg No', key: 'registrationNumber' },
+        { header: 'Model', key: 'name' },
+        { header: 'Type', key: 'type' },
+        { header: 'Capacity (kg)', key: 'maxLoadCapacity' },
+        { header: 'Status', key: 'status' },
+      ],
+      rows: result,
+    });
+  };
+
   return (
     <div className="p-6 max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-5">
         <h1 className="text-lg font-bold text-ink">Vehicle Registry</h1>
-        <span className="text-xs text-ink-faint">{vehicles.length} registered</span>
+        <div className="flex items-center gap-2">
+          <Link to="/vehicles/documents" className="btn-secondary inline-flex items-center gap-1.5 text-xs">
+            <FileText size={13} /> Manage Documents
+          </Link>
+          <span className="text-xs text-ink-faint">{vehicles.length} registered</span>
+        </div>
       </div>
 
       {/* Registration Form */}
@@ -93,24 +125,39 @@ const Vehicles = () => {
         {error && <p className="text-danger text-xs mt-3">{error}</p>}
       </form>
 
+      {/* Bonus feature: search, filter, sort, and PDF export toolbar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+        <div className="flex items-center gap-3">
+          <SearchBox value={search} onChange={setSearch} placeholder="Search reg no, model, type…" />
+          <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="field">
+            <option value="">All Statuses</option>
+            <option value="Available">Available</option>
+            <option value="On Trip">On Trip</option>
+            <option value="In Shop">In Shop</option>
+            <option value="Retired">Retired</option>
+          </select>
+        </div>
+        <button onClick={handleExportPDF} disabled={!result.length} className="btn-secondary">Export PDF</button>
+      </div>
+
       {/* Master List of Vehicles */}
       <div className="table-shell">
         <table className="table-base">
           <thead>
             <tr>
-              <th>Reg No</th>
-              <th>Model</th>
-              <th>Type</th>
-              <th>Capacity</th>
-              <th>Status</th>
+              <SortableTh label="Reg No" sortKeyName="registrationNumber" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
+              <SortableTh label="Model" sortKeyName="name" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
+              <SortableTh label="Type" sortKeyName="type" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
+              <SortableTh label="Capacity" sortKeyName="maxLoadCapacity" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
+              <SortableTh label="Status" sortKeyName="status" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            {vehicles.length === 0 && (
-              <tr><td colSpan={6} className="p-4 text-center text-ink-faint">No vehicles registered yet.</td></tr>
+            {result.length === 0 && (
+              <tr><td colSpan={6} className="p-4 text-center text-ink-faint">No vehicles match your search.</td></tr>
             )}
-            {vehicles.map(v => (
+            {result.map(v => (
               <tr key={v.id}>
                 <td className="font-mono text-ink">{v.registrationNumber}</td>
                 <td>{v.name}</td>

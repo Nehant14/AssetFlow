@@ -2,6 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { getVehicles } from '../../api/vehicles.api';
 import { getDrivers } from '../../api/drivers.api';
 import { getBookings, createBooking, cancelBooking, completeBooking } from '../../api/trips.api';
+import { SearchBox, SortableTh } from '../../components/common';
+import useTableControls from '../../hooks/useTableControls';
+import { exportTableToPDF } from '../../utils/pdfExport';
+import { useAuth } from '../../context/AuthContext';
+import { can } from '../../auth/roles';
 
 const statusBadge = {
   Draft: 'badge-neutral',
@@ -20,6 +25,9 @@ const emptyForm = {
 };
 
 const Trips = () => {
+  const { user } = useAuth();
+  const canDispatch = can(user?.role, 'dispatchTrips');
+
   const [trips, setTrips] = useState([]);
   const [vehicles, setVehicles] = useState([]);
   const [drivers, setDrivers] = useState([]);
@@ -27,6 +35,13 @@ const Trips = () => {
   const [error, setError] = useState('');
   const [completingTrip, setCompletingTrip] = useState(null);
   const [completionData, setCompletionData] = useState({ finalOdometer: '', fuelConsumed: '' });
+  const [statusFilter, setStatusFilter] = useState('');
+
+  // Bonus feature: search, filters, and sorting
+  const { search, setSearch, sortKey, sortDir, toggleSort, result } = useTableControls(
+    trips.filter(t => !statusFilter || t.status === statusFilter),
+    ['source', 'destination', 'vehicleRegistrationNumber', 'driverName']
+  );
 
   useEffect(() => {
     loadAll();
@@ -114,61 +129,95 @@ const Trips = () => {
     }
   };
 
+  const handleExportPDF = () => {
+    exportTableToPDF({
+      title: 'TransitOps — Trip Log',
+      filename: `trip-log-${new Date().toISOString().slice(0, 10)}.pdf`,
+      columns: [
+        { header: 'Route', key: 'route', format: (t) => `${t.source} -> ${t.destination}` },
+        { header: 'Vehicle', key: 'vehicleRegistrationNumber' },
+        { header: 'Driver', key: 'driverName' },
+        { header: 'Cargo (kg)', key: 'cargoWeight' },
+        { header: 'Status', key: 'status' },
+      ],
+      rows: result,
+    });
+  };
+
   return (
     <div className="p-6 max-w-6xl mx-auto">
       <h1 className="text-lg font-bold text-ink mb-5">Trip Management</h1>
 
-      <div className="card p-4 max-w-2xl mb-8">
-        <p className="panel-header mb-3">Create &amp; dispatch trip</p>
-        <form onSubmit={handleDispatch} className="grid grid-cols-2 gap-3">
-          <input type="text" placeholder="Source" required value={formData.source}
-            onChange={(e) => setFormData({ ...formData, source: e.target.value })} className="field" />
-          <input type="text" placeholder="Destination" required value={formData.destination}
-            onChange={(e) => setFormData({ ...formData, destination: e.target.value })} className="field" />
-          <input type="number" placeholder="Cargo Weight (kg)" required value={formData.cargoWeight}
-            onChange={(e) => setFormData({ ...formData, cargoWeight: e.target.value })} className="field" />
-          <input type="number" placeholder="Planned Distance (km)" required value={formData.plannedDistance}
-            onChange={(e) => setFormData({ ...formData, plannedDistance: e.target.value })} className="field" />
+      {canDispatch ? (
+        <div className="card p-4 max-w-2xl mb-8">
+          <p className="panel-header mb-3">Create &amp; dispatch trip</p>
+          <form onSubmit={handleDispatch} className="grid grid-cols-2 gap-3">
+            <input type="text" placeholder="Source" required value={formData.source}
+              onChange={(e) => setFormData({ ...formData, source: e.target.value })} className="field" />
+            <input type="text" placeholder="Destination" required value={formData.destination}
+              onChange={(e) => setFormData({ ...formData, destination: e.target.value })} className="field" />
+            <input type="number" placeholder="Cargo Weight (kg)" required value={formData.cargoWeight}
+              onChange={(e) => setFormData({ ...formData, cargoWeight: e.target.value })} className="field" />
+            <input type="number" placeholder="Planned Distance (km)" required value={formData.plannedDistance}
+              onChange={(e) => setFormData({ ...formData, plannedDistance: e.target.value })} className="field" />
 
-          <select required value={formData.vehicleId} onChange={(e) => setFormData({ ...formData, vehicleId: e.target.value })} className="field">
-            <option value="">Select Available Vehicle</option>
-            {vehicles.map(v => (
-              <option key={v.id} value={v.id}>{v.registrationNumber} (Max: {v.maxLoadCapacity}kg)</option>
-            ))}
+            <select required value={formData.vehicleId} onChange={(e) => setFormData({ ...formData, vehicleId: e.target.value })} className="field">
+              <option value="">Select Available Vehicle</option>
+              {vehicles.map(v => (
+                <option key={v.id} value={v.id}>{v.registrationNumber} (Max: {v.maxLoadCapacity}kg)</option>
+              ))}
+            </select>
+
+            <select required value={formData.driverId} onChange={(e) => setFormData({ ...formData, driverId: e.target.value })} className="field">
+              <option value="">Select Available Driver</option>
+              {drivers.map(d => (
+                <option key={d.id} value={d.id}>{d.name} (License: {d.licenseNumber})</option>
+              ))}
+            </select>
+
+            {error && <p className="text-danger text-xs col-span-2">{error}</p>}
+            <button type="submit" className="btn-primary col-span-2">
+              Dispatch Trip
+            </button>
+          </form>
+        </div>
+      ) : (
+        <div className="card px-4 py-2.5 mb-6 border-info/30 bg-info-soft">
+          <p className="text-xs text-info">Your role ({user?.role}) can view trips but can't dispatch new ones. Contact a Fleet Manager to request dispatch.</p>
+        </div>
+      )}
+
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+        <p className="panel-header">All trips</p>
+        <div className="flex items-center gap-3">
+          <SearchBox value={search} onChange={setSearch} placeholder="Search route, vehicle, driver…" />
+          <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="field">
+            <option value="">All Statuses</option>
+            <option value="Draft">Draft</option>
+            <option value="Dispatched">Dispatched</option>
+            <option value="Completed">Completed</option>
+            <option value="Cancelled">Cancelled</option>
           </select>
-
-          <select required value={formData.driverId} onChange={(e) => setFormData({ ...formData, driverId: e.target.value })} className="field">
-            <option value="">Select Available Driver</option>
-            {drivers.map(d => (
-              <option key={d.id} value={d.id}>{d.name} (License: {d.licenseNumber})</option>
-            ))}
-          </select>
-
-          {error && <p className="text-danger text-xs col-span-2">{error}</p>}
-          <button type="submit" className="btn-primary col-span-2">
-            Dispatch Trip
-          </button>
-        </form>
+          <button onClick={handleExportPDF} disabled={!result.length} className="btn-secondary">Export PDF</button>
+        </div>
       </div>
-
-      <p className="panel-header mb-2">All trips</p>
       <div className="table-shell">
         <table className="table-base">
           <thead>
             <tr>
-              <th>Route</th>
-              <th>Vehicle</th>
-              <th>Driver</th>
-              <th>Cargo</th>
-              <th>Status</th>
+              <SortableTh label="Route" sortKeyName="source" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
+              <SortableTh label="Vehicle" sortKeyName="vehicleRegistrationNumber" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
+              <SortableTh label="Driver" sortKeyName="driverName" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
+              <SortableTh label="Cargo" sortKeyName="cargoWeight" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
+              <SortableTh label="Status" sortKeyName="status" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            {trips.length === 0 && (
-              <tr><td colSpan={6} className="p-4 text-center text-ink-faint">No trips created yet.</td></tr>
+            {result.length === 0 && (
+              <tr><td colSpan={6} className="p-4 text-center text-ink-faint">No trips match your search.</td></tr>
             )}
-            {trips.map(t => (
+            {result.map(t => (
               <tr key={t.id}>
                 <td className="text-ink">{t.source} → {t.destination}</td>
                 <td className="font-mono">{t.vehicleRegistrationNumber || t.vehicleId}</td>
@@ -176,13 +225,13 @@ const Trips = () => {
                 <td>{t.cargoWeight} kg</td>
                 <td><span className={`badge ${statusBadge[t.status] || 'badge-neutral'}`}>{t.status}</span></td>
                 <td className="space-x-3">
-                  {t.status === 'Dispatched' && (
+                  {canDispatch && t.status === 'Dispatched' && (
                     <>
                       <button onClick={() => openCompleteModal(t)} className="link-action">Complete</button>
                       <button onClick={() => handleCancel(t.id)} className="link-action !text-danger">Cancel</button>
                     </>
                   )}
-                  {t.status !== 'Dispatched' && <span className="text-ink-faint text-sm">—</span>}
+                  {(!canDispatch || t.status !== 'Dispatched') && <span className="text-ink-faint text-sm">—</span>}
                 </td>
               </tr>
             ))}

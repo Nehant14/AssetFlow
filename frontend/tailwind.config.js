@@ -15,21 +15,23 @@ export default {
           600: '#1d4ed8',
           700: '#1e40af',
         },
-        // TransitOps dark operations-console palette
+        // TransitOps operations-console palette — driven by CSS variables so
+        // the same utility classes (bg-base-900, text-ink, etc.) automatically
+        // repaint for the light theme (see index.css :root / html.light).
         base: {
-          950: '#0a0c0d',
-          900: '#0d1011',
-          800: '#131718',
-          700: '#181d1f',
+          950: 'rgb(var(--c-base-950) / <alpha-value>)',
+          900: 'rgb(var(--c-base-900) / <alpha-value>)',
+          800: 'rgb(var(--c-base-800) / <alpha-value>)',
+          700: 'rgb(var(--c-base-700) / <alpha-value>)',
         },
-        panel: '#141819',
-        panel2: '#191f21',
-        line: '#262d2f',
-        line2: '#333c3f',
+        panel: 'rgb(var(--c-panel) / <alpha-value>)',
+        panel2: 'rgb(var(--c-panel2) / <alpha-value>)',
+        line: 'rgb(var(--c-line) / <alpha-value>)',
+        line2: 'rgb(var(--c-line2) / <alpha-value>)',
         ink: {
-          DEFAULT: '#e6ebec',
-          dim: '#9aa7aa',
-          faint: '#66787c',
+          DEFAULT: 'rgb(var(--c-ink) / <alpha-value>)',
+          dim: 'rgb(var(--c-ink-dim) / <alpha-value>)',
+          faint: 'rgb(var(--c-ink-faint) / <alpha-value>)',
         },
         accent: {
           DEFAULT: '#3ecf8e',
