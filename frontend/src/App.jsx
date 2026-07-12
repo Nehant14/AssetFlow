@@ -11,11 +11,11 @@ function App() {
   const isAuthenticated = !!user;
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex h-screen bg-base-900">
       {isAuthenticated && <Sidebar />}
       <div className="flex-1 flex flex-col overflow-hidden">
         {isAuthenticated && <Navbar />}
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-200">
+        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-base-900">
           <AppRoutes />
         </main>
       </div>
