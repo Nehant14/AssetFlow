@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { can } from '../../auth/roles';
 
 // Gates a route (and everything nested under it) behind an RBAC capability.
-// Usage: <Route element={<RoleRoute capability="manageVehicles" />}> ... </Route>
+// Usage: <Route element={<RoleRoute capability="manageAssets" />}> ... </Route>
 // If `capability` is null/undefined, any authenticated role may pass.
 const RoleRoute = ({ capability }) => {
   const { user } = useAuth();
@@ -20,7 +20,7 @@ const RoleRoute = ({ capability }) => {
           <h2 className="text-base font-bold text-ink mb-2">Access restricted</h2>
           <p className="text-sm text-ink-dim">
             Your role (<span className="text-ink font-medium">{user?.role || 'Unknown'}</span>) doesn't have
-            permission to view this section. Contact a Fleet Manager if you believe this is a mistake.
+            permission to view this section. Contact an Admin if you believe this is a mistake.
           </p>
         </div>
       </div>

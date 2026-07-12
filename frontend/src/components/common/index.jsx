@@ -8,7 +8,7 @@ export const Card = ({ children, className = '' }) => (
   </div>
 );
 
-// Bonus feature: search box used across list pages (Vehicles, Drivers, Trips, etc.)
+// Bonus feature: search box used across list pages (Assets, Bookings, etc.)
 export const SearchBox = ({ value, onChange, placeholder = 'Search…', className = '' }) => (
   <div className={`relative ${className}`}>
     <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint" />

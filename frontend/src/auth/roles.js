@@ -1,73 +1,73 @@
 // Role-Based Access Control (RBAC) configuration.
-// Target users: Fleet Managers, Drivers, Safety Officers, Financial Analysts.
+// Matches the backend's `Role` enum exactly: Admin, AssetManager,
+// DepartmentHead, Employee (see prisma/schema.prisma).
 //
 // This is the single source of truth the frontend uses to decide what each
 // role can see and do. The backend must still enforce these rules
-// server-side — this only controls the UI (hiding nav items, disabling
-// buttons, blocking routes) for a clean role-appropriate experience.
+// server-side (via restrictTo(...) on routes) — this only controls the UI
+// (hiding forms/buttons, blocking routes) for a clean role-appropriate
+// experience.
 
 export const ROLES = {
-  FLEET_MANAGER: 'Fleet Manager',
-  DRIVER: 'Driver',
-  SAFETY_OFFICER: 'Safety Officer',
-  FINANCIAL_ANALYST: 'Financial Analyst',
+  ADMIN: 'Admin',
+  ASSET_MANAGER: 'AssetManager',
+  DEPARTMENT_HEAD: 'DepartmentHead',
+  EMPLOYEE: 'Employee',
 };
 
 export const ALL_ROLES = Object.values(ROLES);
 
 // Capability matrix. Every capability defaults to false for a role unless
-// listed here.
+// listed here. Most GET endpoints in this API are open to any authenticated
+// user — the real gating in the backend happens on mutations (create/update),
+// which is what this matrix mirrors.
 const PERMISSIONS = {
-  [ROLES.FLEET_MANAGER]: {
+  [ROLES.ADMIN]: {
     viewDashboard: true,
-    manageVehicles: true,
-    manageDrivers: true,
-    dispatchTrips: true,
-    manageMaintenance: true,
-    manageExpenses: true,
-    viewReports: true,
-    exportReports: true,
-    manageReminders: true,
-    manageDocuments: true,
+    manageAssets: true,
+    manageAllocations: true,
+    createBooking: true,
+    raiseMaintenance: true,
+    manageMaintenanceStatus: true,
+    manageAudits: true,
+    recordAuditVerification: true,
+    manageOrganization: true,
     viewNotifications: true,
   },
-  [ROLES.DRIVER]: {
+  [ROLES.ASSET_MANAGER]: {
     viewDashboard: true,
-    manageVehicles: false,
-    manageDrivers: false,
-    dispatchTrips: false, // can view own trips, not dispatch new ones
-    manageMaintenance: false,
-    manageExpenses: false,
-    viewReports: false,
-    exportReports: false,
-    manageReminders: false,
-    manageDocuments: false,
+    manageAssets: true,
+    manageAllocations: true,
+    createBooking: true,
+    raiseMaintenance: true,
+    manageMaintenanceStatus: true,
+    manageAudits: false,
+    recordAuditVerification: true,
+    manageOrganization: false,
     viewNotifications: true,
   },
-  [ROLES.SAFETY_OFFICER]: {
+  [ROLES.DEPARTMENT_HEAD]: {
     viewDashboard: true,
-    manageVehicles: false,
-    manageDrivers: true, // owns license/safety compliance
-    dispatchTrips: false,
-    manageMaintenance: true, // owns roadworthiness / maintenance cycles
-    manageExpenses: false,
-    viewReports: true,
-    exportReports: false,
-    manageReminders: true, // license expiry reminders are a safety concern
-    manageDocuments: true, // vehicle compliance documents
+    manageAssets: false,
+    manageAllocations: false,
+    createBooking: true,
+    raiseMaintenance: true,
+    manageMaintenanceStatus: false,
+    manageAudits: false,
+    recordAuditVerification: true,
+    manageOrganization: false,
     viewNotifications: true,
   },
-  [ROLES.FINANCIAL_ANALYST]: {
+  [ROLES.EMPLOYEE]: {
     viewDashboard: true,
-    manageVehicles: false,
-    manageDrivers: false,
-    dispatchTrips: false,
-    manageMaintenance: false,
-    manageExpenses: true,
-    viewReports: true,
-    exportReports: true,
-    manageReminders: false,
-    manageDocuments: false,
+    manageAssets: false,
+    manageAllocations: false,
+    createBooking: true,
+    raiseMaintenance: true,
+    manageMaintenanceStatus: false,
+    manageAudits: false,
+    recordAuditVerification: false,
+    manageOrganization: false,
     viewNotifications: true,
   },
 };
@@ -78,16 +78,16 @@ export const can = (role, capability) => {
 };
 
 // Every route in the app, tagged with the capability required to see it.
-// `null` means "any authenticated role".
+// `null` means "any authenticated role" — most pages here are readable by
+// everyone since the underlying GET endpoints aren't role-restricted;
+// individual forms/buttons inside each page are gated with `can(...)`.
 export const ROUTE_CAPABILITY = {
   '/': null,
-  '/vehicles': 'manageVehicles',
-  '/vehicles/documents': 'manageDocuments',
-  '/drivers': null, // everyone can view; manageDrivers gates edit actions inside the page
-  '/trips': null, // everyone can view; dispatchTrips gates the dispatch form
+  '/assets': null,
+  '/allocations': null,
+  '/bookings': null,
   '/maintenance': null,
-  '/fuel-expenses': 'manageExpenses',
-  '/reports': 'viewReports',
-  '/reminders': 'manageReminders',
-  '/notifications': 'viewNotifications',
+  '/audits': null,
+  '/organization': null,
+  '/notifications': null,
 };

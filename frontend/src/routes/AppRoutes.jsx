@@ -2,16 +2,13 @@ import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import ProtectedRoute from '../components/layout/ProtectedRoute';
-import RoleRoute from '../components/layout/RoleRoute';
 import Dashboard from '../pages/Dashboard';
-import Vehicles from '../pages/Vehicles';
-import VehicleDocuments from '../pages/Vehicles/Documents';
-import Drivers from '../pages/Drivers';
-import Trips from '../pages/Trips';
+import Assets from '../pages/Assets';
+import Allocations from '../pages/Allocations';
+import Bookings from '../pages/Bookings';
 import Maintenance from '../pages/Maintenance';
-import FuelExpenses from '../pages/FuelExpenses';
-import Reports from '../pages/Reports';
-import Reminders from '../pages/Reminders';
+import Audits from '../pages/Audits';
+import Organization from '../pages/Organization';
 import Notifications from '../pages/Notifications';
 import LoginPage from '../auth/LoginPage';
 import SignupPage from '../auth/SignupPage';
@@ -24,34 +21,18 @@ const AppRoutes = () => {
       <Route path="/login" element={!user ? <LoginPage /> : <Navigate to="/" replace />} />
       <Route path="/signup" element={!user ? <SignupPage /> : <Navigate to="/" replace />} />
 
-      {/* Protected Routes - only authenticated users may access the application */}
+      {/* Protected Routes - only authenticated users may access the application.
+          Most GET endpoints on the backend are open to any authenticated role,
+          so pages are readable by everyone; individual forms/buttons inside
+          each page are gated by capability via auth/roles.js. */}
       <Route element={<ProtectedRoute />}>
         <Route path="/" element={<Dashboard />} />
-
-        <Route element={<RoleRoute capability="manageVehicles" />}>
-          <Route path="/vehicles" element={<Vehicles />} />
-        </Route>
-
-        <Route element={<RoleRoute capability="manageDocuments" />}>
-          <Route path="/vehicles/documents" element={<VehicleDocuments />} />
-        </Route>
-
-        <Route path="/drivers" element={<Drivers />} />
-        <Route path="/trips" element={<Trips />} />
+        <Route path="/assets" element={<Assets />} />
+        <Route path="/allocations" element={<Allocations />} />
+        <Route path="/bookings" element={<Bookings />} />
         <Route path="/maintenance" element={<Maintenance />} />
-
-        <Route element={<RoleRoute capability="manageExpenses" />}>
-          <Route path="/fuel-expenses" element={<FuelExpenses />} />
-        </Route>
-
-        <Route element={<RoleRoute capability="viewReports" />}>
-          <Route path="/reports" element={<Reports />} />
-        </Route>
-
-        <Route element={<RoleRoute capability="manageReminders" />}>
-          <Route path="/reminders" element={<Reminders />} />
-        </Route>
-
+        <Route path="/audits" element={<Audits />} />
+        <Route path="/organization" element={<Organization />} />
         <Route path="/notifications" element={<Notifications />} />
       </Route>
 
