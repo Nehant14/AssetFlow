@@ -29,9 +29,15 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       const response = await apiLogin(email, password); // Secure login using email and password
-      setUser(response.data.user);
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
+      // Every backend response is wrapped as { status, data: {...} } — the
+      // rest of the app already unwraps with `res.data?.data`, but this call
+      // was reading `response.data.user`/`response.data.token` directly, one
+      // level too shallow, so `user` and `token` were always undefined and
+      // login silently "succeeded" while storing the string "undefined".
+      const { user: loggedInUser, token } = response.data?.data || {};
+      setUser(loggedInUser);
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(loggedInUser));
     } catch (error) {
       console.error("Login failed", error);
       throw error;

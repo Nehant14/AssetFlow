@@ -1,10 +1,10 @@
 import React, { useContext } from 'react';
-import { Sun, Moon } from 'lucide-react';
+import { Sun, Moon, Menu } from 'lucide-react';
 import { AuthContext } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { Link } from 'react-router-dom';
 
-const Navbar = () => {
+const Navbar = ({ onMenuClick }) => {
   const { user, logout } = useContext(AuthContext);
   const { theme, toggleTheme } = useTheme();
 
@@ -32,14 +32,14 @@ const Navbar = () => {
           {user?.role || 'Employee'}
         </Link>
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-full bg-panel2 border border-line flex items-center justify-center text-xs font-semibold text-ink-dim">
+          <div className="w-8 h-8 rounded-full bg-panel2 border border-line flex items-center justify-center text-xs font-semibold text-ink-dim shrink-0">
             {initials}
           </div>
-          <span className="text-sm text-ink-dim hidden sm:inline">{user?.name || user?.email}</span>
+          <span className="text-sm text-ink-dim hidden md:inline">{user?.name || user?.email}</span>
         </div>
         <button
           onClick={logout}
-          className="text-xs font-medium bg-danger-soft text-danger border border-danger/30 px-3 py-1.5 rounded-md hover:bg-danger/20 transition-colors"
+          className="text-xs font-medium bg-danger-soft text-danger border border-danger/30 px-2.5 sm:px-3 py-1.5 rounded-md hover:bg-danger/20 transition-colors"
         >
           Logout
         </button>

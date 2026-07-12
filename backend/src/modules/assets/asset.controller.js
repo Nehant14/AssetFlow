@@ -29,7 +29,7 @@ exports.getAssets = async (req, res) => {
       { serialNumber: { contains: search, mode: 'insensitive' } }
     ];
   }
-  if (category) whereClause.categoryId = Number(category);
+  if (category) whereClause.categoryId = category;
   if (status) whereClause.status = status;
 
   const assets = await prisma.asset.findMany({
