@@ -1,103 +1,228 @@
-# AssetFlow — Organization Asset Management API
+<div align="center">
 
-AssetFlow is a backend API for tracking and managing an organization's physical assets end-to-end: who has what, who's allowed to book it, when it needs maintenance, and whether it's actually where it's supposed to be.
+# 🗂️ AssetFlow
 
-Built for teams that hand out laptops, tools, vehicles, or shared equipment and need a single source of truth instead of a spreadsheet.
+### Enterprise Asset Management System
 
-## ✨ Core Features
+A full-stack platform for tracking the entire lifecycle of an organization's assets — from allocation and booking to maintenance and audits — behind a secure, role-based access layer.
 
-- **Asset Registry** — register assets with auto-generated tags (`AF-0001`, `AF-0002`...), track condition, location, and status (Available, Allocated, Reserved, Under Maintenance, Lost, Retired, Disposed)
-- **Allocations** — assign assets to employees or departments, with a built-in guard that blocks double-allocating an asset that's already checked out
-- **Bookings** — reserve shared/bookable resources (e.g. a meeting room projector) for a time window, with overlap detection so two people can't double-book the same slot
-- **Maintenance Requests** — employees raise issues on an asset; status flows from Pending → Approved/Rejected → In Progress → Resolved, automatically flipping the asset's status along the way
-- **Audit Cycles** — periodic physical audits per department/location, with per-asset verification (Verified / Missing / Damaged) that auto-updates asset status on discrepancies
-- **Org Structure** — departments (with hierarchy), categories, and employees with role-based access
-- **Role-Based Access Control** — Admin, Asset Manager, Department Head, and Employee roles, enforced via middleware on sensitive routes
-- **Dashboard KPIs** — quick counts (available/allocated assets, active bookings, pending maintenance) for a home-screen overview
+![Node.js](https://img.shields.io/badge/Node.js-Backend-339933?logo=node.js&logoColor=white)
+![Express](https://img.shields.io/badge/Express-5.x-000000?logo=express&logoColor=white)
+![React](https://img.shields.io/badge/React-Vite-61DAFB?logo=react&logoColor=black)
+![Prisma](https://img.shields.io/badge/Prisma-ORM-2D3748?logo=prisma&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-4169E1?logo=postgresql&logoColor=white)
+![Tailwind](https://img.shields.io/badge/Tailwind-CSS-06B6D4?logo=tailwindcss&logoColor=white)
+![JWT](https://img.shields.io/badge/Auth-JWT-black?logo=jsonwebtokens)
 
-## 🛠️ Tech Stack
+</div>
 
-- **Node.js + Express 5** — REST API
-- **PostgreSQL + Prisma ORM** — data layer, with migrations
-- **JWT + bcrypt** — auth and password hashing
+---
 
-## 📐 Architecture
+## 📖 Overview
 
-Modular, feature-based structure — each domain owns its routes, controller, and service:
+AssetFlow is a comprehensive full-stack application designed to streamline the management of organizational assets. It provides tools for tracking the asset lifecycle, handling bookings and allocations, managing maintenance schedules, and conducting audits — all wrapped in a secure, role-based access control (RBAC) system.
 
+## 🚀 Tech Stack
+
+<table>
+<tr>
+<td valign="top" width="50%">
+
+**Frontend**
+- ⚛️ **Framework:** React.js powered by Vite
+- 🎨 **Styling:** Tailwind CSS
+- 🧭 **Routing:** React Router
+- 🌐 **State Management:** React Context (`AuthContext`, `ThemeContext`)
+- 📡 **API Client:** Axios with custom interceptors
+
+</td>
+<td valign="top" width="50%">
+
+**Backend**
+- 🟩 **Environment:** Node.js
+- 🚏 **API Framework:** Express.js (v5)
+- 🗄️ **Database ORM:** Prisma → PostgreSQL
+- 🔐 **Authentication:** JWT + RBAC middleware
+
+</td>
+</tr>
+</table>
+
+## 🏗️ Project Structure
+
+A monorepo containing two distinct directories:
+
+```text
+AssetFlow/
+├── backend/                # Node.js backend API
+│   ├── prisma/              # Database schema & migrations
+│   ├── src/
+│   │   ├── config/           # Database and server configuration
+│   │   ├── middlewares/      # Auth, RBAC, and error handling
+│   │   ├── modules/          # Domain-specific logic
+│   │   │   ├── auth/           # Signup, login, JWT issuance
+│   │   │   ├── assets/         # Asset registry & lookup
+│   │   │   ├── allocations/    # Check-out / check-in flow
+│   │   │   ├── bookings/       # Shared-resource time-slot booking
+│   │   │   ├── maintenance/    # Issue reporting & resolution
+│   │   │   ├── audits/         # Audit cycles & verification
+│   │   │   ├── organization/   # Departments, categories, employees
+│   │   │   └── notifications/  # Dashboard KPIs & alerts
+│   │   └── utils/             # Helpers (e.g. asset tag generator)
+│   └── package.json
+│
+└── frontend/                # React frontend
+    ├── src/
+    │   ├── api/               # Axios API configuration
+    │   ├── auth/               # Login, signup, role definitions
+    │   ├── components/         # Reusable UI (Nav, Sidebar, Common)
+    │   ├── context/             # Global state providers
+    │   ├── pages/               # Top-level route views (Dashboard, Assets...)
+    │   └── utils/                # Helpers (e.g. PDF export)
+    ├── tailwind.config.js
+    ├── vite.config.js
+    └── package.json
 ```
-src/
-├── modules/
-│   ├── auth/            # signup, login, JWT issuance
-│   ├── assets/           # asset registry & lookup
-│   ├── allocations/      # check-out / check-in to employees or departments
-│   ├── bookings/         # time-slot reservations for shared assets
-│   ├── maintenance/      # issue reporting & resolution workflow
-│   ├── audits/           # audit cycles & verification
-│   ├── organization/     # departments, categories, employees
-│   └── notifications/    # dashboard KPIs
-├── middlewares/          # auth guard, role guard, error handler
-└── config/               # Prisma client setup
-```
 
-## 🔑 API Overview
+## ✨ Key Features
 
-| Module | Endpoint | Description |
+| Feature | Description |
+|---|---|
+| 🔐 **Authentication & Authorization** | Secure login/signup with role-based routing (Admin, Asset Manager, Department Head, Employee) |
+| 📦 **Asset Management** | Register, update, and track physical/digital assets with auto-generated tags (`AF-0001`...) |
+| 🔄 **Allocations & Bookings** | Assign assets to employees/departments, or let users book shared assets — with double-allocation and overlap guards built in |
+| 🛠️ **Maintenance Tracking** | Log, schedule, and resolve repairs; asset status updates automatically as requests progress |
+| 🔍 **Auditing** | Run inventory audit cycles per department/location; flag Verified / Missing / Damaged items |
+| 🏢 **Organization Management** | Manage departments (with hierarchy), asset categories, and employee records |
+| 🔔 **Notifications & Dashboard** | Real-time-style alerts and at-a-glance KPIs (available/allocated assets, active bookings, pending maintenance) |
+| 📄 **PDF Export** | Generate reports for asset lists, audits, and maintenance histories |
+
+## 🔑 Backend API Reference
+
+All routes are prefixed with `/api` and require a `Bearer` JWT token unless marked public.
+
+| Module | Endpoint | Access |
 |---|---|---|
-| Auth | `POST /api/auth/signup` | Register a new user |
-| Auth | `POST /api/auth/login` | Log in, get a JWT |
-| Assets | `POST /api/assets` | Register a new asset *(Admin/Asset Manager)* |
-| Assets | `GET /api/assets` | Search/filter assets |
-| Allocations | `POST /api/allocations` | Allocate an asset to a user/department |
-| Allocations | `POST /api/allocations/:id/return` | Return an allocated asset |
-| Bookings | `POST /api/bookings` | Book a shared asset for a time window |
-| Bookings | `GET /api/bookings` | List bookings |
-| Maintenance | `POST /api/maintenance` | Raise a maintenance request |
-| Maintenance | `PATCH /api/maintenance/:id/status` | Update request status *(Admin/Asset Manager)* |
-| Audits | `POST /api/audits/cycles` | Start an audit cycle *(Admin)* |
-| Audits | `POST /api/audits/verify` | Record a verification result |
-| Audits | `PATCH /api/audits/cycles/:id/close` | Close & reconcile an audit cycle *(Admin)* |
-| Organization | `POST /api/org/departments`, `/categories` | Manage master data *(Admin)* |
-| Organization | `GET /api/org/employees` | List employees |
-| Organization | `PATCH /api/org/employees/:id/role` | Change a user's role *(Admin)* |
-| Notifications | `GET /api/notifications/dashboard-kpis` | Dashboard summary counts |
+| Auth | `POST /auth/signup` | Public |
+| Auth | `POST /auth/login` | Public |
+| Assets | `POST /assets` | Admin, Asset Manager |
+| Assets | `GET /assets` | Authenticated |
+| Allocations | `POST /allocations` | Admin, Asset Manager |
+| Allocations | `POST /allocations/:id/return` | Admin, Asset Manager |
+| Bookings | `POST /bookings` | Authenticated |
+| Bookings | `GET /bookings` | Authenticated |
+| Maintenance | `POST /maintenance` | Authenticated |
+| Maintenance | `PATCH /maintenance/:id/status` | Admin, Asset Manager |
+| Audits | `POST /audits/cycles` | Admin |
+| Audits | `POST /audits/verify` | Authenticated |
+| Audits | `PATCH /audits/cycles/:id/close` | Admin |
+| Organization | `POST /org/departments` | Admin |
+| Organization | `GET /org/departments` | Authenticated |
+| Organization | `POST /org/categories` | Admin |
+| Organization | `GET /org/categories` | Authenticated |
+| Organization | `GET /org/employees` | Authenticated |
+| Organization | `PATCH /org/employees/:id/role` | Admin |
+| Notifications | `GET /notifications/dashboard-kpis` | Authenticated |
+| Health | `GET /health` | Public |
 
-All routes except `/auth` and `/health` require a `Bearer` JWT token.
+## 🛠️ Getting Started (Local Development)
 
-## 🚀 Getting Started
+### Prerequisites
+- Node.js
+- A database system compatible with Prisma (PostgreSQL recommended)
+
+### 1. Backend Setup
 
 ```bash
-# 1. Install dependencies
+cd backend
 npm install
+```
 
-# 2. Configure environment
-cp .env.example .env
-# fill in DATABASE_URL, DIRECT_URL, JWT_SECRET, JWT_EXPIRES_IN, PORT
+**Environment configuration** — copy `.env.example` to `.env` and fill in your database connection string and secrets:
 
-# 3. Run migrations
+```env
+DATABASE_URL=
+DIRECT_URL=
+JWT_SECRET=
+JWT_EXPIRES_IN=
+PORT=5000
+```
+
+**Initialize the database** — generate the Prisma client and apply the schema:
+
+```bash
+npx prisma generate
 npx prisma migrate dev
+```
 
-# 4. Start the server
+**Start the server:**
+
+```bash
 npm run dev
 ```
 
-Health check: `GET /api/health`
+### 2. Frontend Setup
+
+Open a new terminal (keep the backend running):
+
+```bash
+cd frontend
+npm install
+```
+
+**Environment configuration** — copy `.env.example` to `.env` and point it at your running backend:
+
+```env
+VITE_API_URL=http://localhost:5000/api
+```
+
+**Start the application:**
+
+```bash
+npm run dev
+```
+
+## 📜 Available Scripts
+
+<table>
+<tr>
+<td valign="top" width="50%">
+
+**Backend** (`/backend`)
+- `npm run dev` — Starts the development server
+
+</td>
+<td valign="top" width="50%">
+
+**Frontend** (`/frontend`)
+- `npm run dev` — Starts the Vite development server
+- `npm run build` — Builds the app for production
+- `npm run preview` — Serves the production build locally
+
+</td>
+</tr>
+</table>
 
 ## 👥 Roles
 
-| Role | Can do |
+| Role | Permissions |
 |---|---|
-| Admin | Everything — org setup, role management, audits |
-| Asset Manager | Register/allocate assets, manage maintenance |
-| Department Head | Departmental oversight |
-| Employee | Book resources, raise maintenance requests |
+| 🛡️ **Admin** | Full access — org setup, role management, audits |
+| 🧰 **Asset Manager** | Register/allocate assets, manage maintenance |
+| 🏢 **Department Head** | Departmental oversight |
+| 👤 **Employee** | Book resources, raise maintenance requests |
 
 ## 🗺️ Roadmap Ideas
 
-- Asset transfer requests between departments (schema already supports it via `Transfer` model)
-- Notification delivery (email/push) beyond the current KPI endpoint
+- Asset transfer requests between departments
+- Expanded notification delivery (email/push)
 - File uploads for asset photos and maintenance evidence
-- QR-code check-in/check-out flow using the existing `qrCode` field
+- QR-code check-in/check-out flow
 
 ---
-Built for Odoo Hackathon · 2026
+
+<div align="center">
+
+Built for **[Hackathon Name]** · 2026
+
+</div>
