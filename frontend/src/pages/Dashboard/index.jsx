@@ -69,8 +69,8 @@ const Dashboard = () => {
   }, [assets]);
 
   return (
-    <div className="p-4 sm:p-6 max-w-6xl mx-auto">
-      <div className="flex flex-wrap items-center justify-between gap-2 mb-5">
+    <div className="p-6 max-w-6xl mx-auto">
+      <div className="flex items-center justify-between mb-5">
         <div>
           <h1 className="text-lg font-bold text-ink">Today's Overview</h1>
           <p className="text-xs text-ink-faint mt-0.5">Live asset status across your organization</p>

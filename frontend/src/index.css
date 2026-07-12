@@ -110,10 +110,8 @@ body {
   .badge-violet  { @apply bg-violet-soft text-violet border-violet/30; }
 
   /* Tables */
-  /* overflow-x-auto (not overflow-hidden) so wide tables scroll horizontally
-     on narrow screens instead of clipping columns off the edge. */
-  .table-shell { @apply card overflow-x-auto overflow-y-hidden; }
-  .table-base { @apply w-full min-w-[640px] text-left border-collapse text-sm; }
+  .table-shell { @apply card overflow-hidden; }
+  .table-base { @apply w-full text-left border-collapse text-sm; }
   .table-base thead tr { @apply bg-panel2 border-b border-line; }
   .table-base th { @apply p-3 text-xs font-semibold uppercase tracking-wide text-ink-faint; }
   .table-base td { @apply p-3 border-b border-line text-ink-dim; }
