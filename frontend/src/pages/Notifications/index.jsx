@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { PackageCheck, ArrowLeftRight, CalendarClock, Wrench } from 'lucide-react';
-import { getDashboardKPIs } from '../../api/notifications.api';
+import { getDashboardKPIs, getNotifications, markNotificationRead } from '../../api/notifications.api';
 
-const emptyKpis = { totalAvailable: 0, totalAllocated: 0, activeBookings: 0, pendingMaint: 0 };
+const emptyKpis = { totalAvailable: 0, totalAllocated: 0, activeBookings: 0, pendingMaint: 0, maintenanceToday: 0, pendingTransfers: 0, upcomingReturns: 0, overdueReturns: 0 };
 
 const Tile = ({ label, value, icon }) => (
   <div className="stat-tile flex items-start justify-between">
@@ -16,20 +16,29 @@ const Tile = ({ label, value, icon }) => (
   </div>
 );
 
-// Note: the backend does not currently expose a per-user notification feed
-// (no GET /api/notifications), even though a Notification model exists in
-// the schema — only the dashboard KPI aggregate below is wired up. This page
-// surfaces that snapshot as system alerts until an inbox endpoint exists.
 const Notifications = () => {
   const [kpis, setKpis] = useState(emptyKpis);
+  const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getDashboardKPIs()
-      .then(res => setKpis({ ...emptyKpis, ...(res.data?.data || res.data) }))
-      .catch(err => console.error('Failed to fetch KPIs', err))
+    Promise.all([getDashboardKPIs(), getNotifications()])
+      .then(([kpiRes, notifRes]) => {
+        setKpis({ ...emptyKpis, ...(kpiRes.data?.data || kpiRes.data) });
+        setNotifications(notifRes.data?.data || notifRes.data || []);
+      })
+      .catch(err => console.error('Failed to fetch notifications', err))
       .finally(() => setLoading(false));
   }, []);
+
+  const handleMarkRead = async (id) => {
+    try {
+      await markNotificationRead(id);
+      setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
+    } catch (err) {
+      console.error('Failed to mark notification read', err);
+    }
+  };
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
@@ -41,21 +50,33 @@ const Notifications = () => {
       {loading ? (
         <p className="text-ink-faint text-sm">Loading…</p>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <Tile label="Available Assets" value={kpis.totalAvailable} icon={<PackageCheck size={16} />} />
-          <Tile label="Allocated Assets" value={kpis.totalAllocated} icon={<ArrowLeftRight size={16} />} />
-          <Tile label="Active Bookings" value={kpis.activeBookings} icon={<CalendarClock size={16} />} />
-          <Tile label="Pending Maintenance" value={kpis.pendingMaint} icon={<Wrench size={16} />} />
-        </div>
-      )}
+        <>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <Tile label="Available Assets" value={kpis.totalAvailable} icon={<PackageCheck size={16} />} />
+            <Tile label="Allocated Assets" value={kpis.totalAllocated} icon={<ArrowLeftRight size={16} />} />
+            <Tile label="Active Bookings" value={kpis.activeBookings} icon={<CalendarClock size={16} />} />
+            <Tile label="Pending Maintenance" value={kpis.pendingMaint} icon={<Wrench size={16} />} />
+          </div>
 
-      <div className="card p-4 border-warn/30 bg-warn-soft">
-        <p className="text-sm text-warn">
-          A personal notification inbox isn't available yet — the backend only exposes this
-          dashboard KPI snapshot (GET /api/notifications/dashboard-kpis). Once a list endpoint
-          for individual notifications is added, this page can show a real per-user feed.
-        </p>
-      </div>
+          <div className="card p-4">
+            <p className="panel-header mb-3">Inbox</p>
+            {notifications.length === 0 ? (
+              <p className="text-ink-faint text-sm">No notifications yet.</p>
+            ) : (
+              <ul className="space-y-2">
+                {notifications.map(n => (
+                  <li key={n.id} className={`rounded border p-3 text-sm ${n.isRead ? 'border-line bg-panel2' : 'border-accent/40 bg-accent/10'}`}>
+                    <div className="flex items-center justify-between gap-2">
+                      <span>{n.message}</span>
+                      {!n.isRead && <button className="text-xs text-accent" onClick={() => handleMarkRead(n.id)}>Mark read</button>}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 };
