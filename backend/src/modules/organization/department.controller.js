@@ -8,7 +8,7 @@ exports.createDepartment = async (req, res) => {
     });
     // If promoted head, adjust user model role to Department_Head
     if (headId) {
-      await prisma.user.update({ where: { id: headId }, data: { role: 'Department_Head' } });
+      await prisma.user.update({ where: { id: Number(headId) }, data: { role: 'DepartmentHead' } });
     }
     res.status(201).json({ status: 'success', data: dept });
   } catch (err) { res.status(400).json({ status: 'error', message: err.message }); }

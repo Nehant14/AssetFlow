@@ -1,37 +1,25 @@
-const prisma = require('../../config/db');
+const maintenanceService = require('./maintenance.service');
 
-async function createAuditCycle({ name, startDate, endDate, auditorIds }) {
-  return await prisma.auditCycle.create({
-    data: {
-      name,
-      startDate: new Date(startDate),
-      endDate: new Date(endDate),
-      auditors: { connect: auditorIds.map(id => ({ id })) }
-    }
-  });
-}
-
-async function recordVerification({ auditCycleId, assetId, status, notes }) {
-  return await prisma.auditRecord.create({
-    data: { auditCycleId, assetId, status, notes }
-  });
-}
-
-async function closeCycle(id) {
-  const closedCycle = await prisma.auditCycle.update({
-    where: { id },
-    data: { isClosed: true },
-    include: { records: true }
-  });
-
-  // Auto update asset status based on discrepancies captured
-  for (const rec of closedCycle.records) {
-    if (rec.status === 'Missing') {
-      await prisma.asset.update({ where: { id: rec.assetId }, data: { status: 'Lost' } });
-    }
+exports.raiseRequest = async (req, res) => {
+  try {
+    const item = await maintenanceService.createMaintenanceRequest({
+      ...req.body,
+      requesterId: req.user.id
+    });
+    res.status(201).json({ status: 'success', data: item });
+  } catch (err) { 
+    res.status(400).json({ status: 'error', message: err.message }); 
   }
+};
 
-  return closedCycle;
-}
+exports.updateStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body; 
 
-module.exports = { createAuditCycle, recordVerification, closeCycle };
+    const record = await maintenanceService.updateMaintenanceStatus(id, status);
+    res.status(200).json({ status: 'success', data: record });
+  } catch (err) { 
+    res.status(400).json({ status: 'error', message: err.message }); 
+  }
+};

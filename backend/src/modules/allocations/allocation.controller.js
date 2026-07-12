@@ -11,11 +11,11 @@ exports.createAllocation = async (req, res) => {
 exports.returnAsset = async (req, res) => {
   try {
     const { id } = req.params; // Allocation entry ID
-    const { returnNotes } = req.body;
+    const { returnCondition } = req.body;
 
     const allocation = await prisma.allocation.update({
-      where: { id },
-      data: { isActive: false, actualReturnDate: new Date(), returnNotes }
+      where: { id: Number(id) },
+      data: { status: 'Returned', returnedAt: new Date(), returnCondition }
     });
 
     await prisma.asset.update({

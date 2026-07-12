@@ -21,7 +21,7 @@ async function createBooking({ assetId, userId, startTime, endTime }) {
   }
 
   return await prisma.booking.create({
-    data: { assetId, userId, startTime: start, endTime: end }
+    data: { assetId, bookedById: userId, startTime: start, endTime: end }
   });
 }
 

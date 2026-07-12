@@ -6,6 +6,6 @@ const restrictTo = require('../../middlewares/rbac.middleware');
 
 router.use(protect);
 router.post('/', maintCtrl.raiseRequest);
-router.patch('/:id/status', restrictTo(['Admin', 'Asset_Manager']), maintCtrl.updateStatus);
+router.patch('/:id/status', restrictTo(['Admin', 'AssetManager']), maintCtrl.updateStatus);
 
 module.exports = router;

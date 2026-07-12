@@ -9,6 +9,6 @@ exports.bookResource = async (req, res) => {
 };
 
 exports.getBookings = async (req, res) => {
-  const bookings = await prisma.booking.findMany({ include: { asset: true, user: true } });
+  const bookings = await prisma.booking.findMany({ include: { asset: true, bookedBy: true } });
   res.status(200).json({ status: 'success', data: bookings });
 };
