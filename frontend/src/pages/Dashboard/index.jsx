@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Truck, PackageCheck, Wrench, Route, Clock, Users, Gauge } from 'lucide-react';
 import axiosClient from '../../api/axiosClient';
 
 const emptyKpis = {
@@ -11,10 +12,15 @@ const emptyKpis = {
   fleetUtilization: 0,
 };
 
-const KpiCard = ({ label, value, suffix = '' }) => (
-  <div className="bg-white p-4 shadow rounded">
-    <h3 className="text-sm text-gray-500">{label}</h3>
-    <p className="text-2xl font-bold text-slate-800">{value}{suffix}</p>
+const StatTile = ({ label, value, suffix = '', icon }) => (
+  <div className="stat-tile flex items-start justify-between">
+    <div>
+      <p className="stat-value">{value}{suffix}</p>
+      <p className="stat-label">{label}</p>
+    </div>
+    <div className="w-8 h-8 rounded-md bg-panel2 border border-line flex items-center justify-center text-ink-faint">
+      {icon}
+    </div>
   </div>
 );
 
@@ -48,14 +54,22 @@ const Dashboard = () => {
     }
   };
 
-  return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4 text-slate-800">TransitOps Dashboard</h1>
+  const hasFilters = filters.vehicleType || filters.status || filters.region;
 
-      <div className="bg-white p-4 shadow rounded mb-6 flex flex-wrap gap-3 items-end">
+  return (
+    <div className="p-6 max-w-6xl mx-auto">
+      <div className="flex items-center justify-between mb-5">
         <div>
-          <label className="block text-xs text-gray-500 mb-1">Vehicle Type</label>
-          <select value={filters.vehicleType} onChange={e => setFilters({ ...filters, vehicleType: e.target.value })} className="border p-2 rounded">
+          <h1 className="text-lg font-bold text-ink">Today's Overview</h1>
+          <p className="text-xs text-ink-faint mt-0.5">Live fleet status across your operation</p>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="card p-4 mb-5 flex flex-wrap gap-4 items-end">
+        <div>
+          <label className="field-label">Vehicle Type</label>
+          <select value={filters.vehicleType} onChange={e => setFilters({ ...filters, vehicleType: e.target.value })} className="field">
             <option value="">All Types</option>
             <option value="Truck">Truck</option>
             <option value="Van">Van</option>
@@ -64,8 +78,8 @@ const Dashboard = () => {
           </select>
         </div>
         <div>
-          <label className="block text-xs text-gray-500 mb-1">Status</label>
-          <select value={filters.status} onChange={e => setFilters({ ...filters, status: e.target.value })} className="border p-2 rounded">
+          <label className="field-label">Status</label>
+          <select value={filters.status} onChange={e => setFilters({ ...filters, status: e.target.value })} className="field">
             <option value="">All Statuses</option>
             <option value="Available">Available</option>
             <option value="On Trip">On Trip</option>
@@ -74,29 +88,55 @@ const Dashboard = () => {
           </select>
         </div>
         <div>
-          <label className="block text-xs text-gray-500 mb-1">Region</label>
+          <label className="field-label">Region</label>
           <input type="text" placeholder="e.g. North Zone" value={filters.region}
-            onChange={e => setFilters({ ...filters, region: e.target.value })} className="border p-2 rounded" />
+            onChange={e => setFilters({ ...filters, region: e.target.value })} className="field" />
         </div>
-        {(filters.vehicleType || filters.status || filters.region) && (
-          <button onClick={() => setFilters({ vehicleType: '', status: '', region: '' })} className="text-sm text-blue-600 hover:underline">
+        {hasFilters && (
+          <button onClick={() => setFilters({ vehicleType: '', status: '', region: '' })} className="link-action">
             Clear filters
           </button>
         )}
       </div>
 
       {loading ? (
-        <p className="text-gray-500">Loading KPIs...</p>
+        <p className="text-ink-faint text-sm">Loading KPIs…</p>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <KpiCard label="Active Vehicles" value={kpis.activeVehicles} />
-          <KpiCard label="Available Vehicles" value={kpis.availableVehicles} />
-          <KpiCard label="Vehicles In Maintenance" value={kpis.vehiclesInMaintenance} />
-          <KpiCard label="Active Trips" value={kpis.activeTrips} />
-          <KpiCard label="Pending Trips" value={kpis.pendingTrips} />
-          <KpiCard label="Drivers On Duty" value={kpis.driversOnDuty} />
-          <KpiCard label="Fleet Utilization" value={kpis.fleetUtilization} suffix="%" />
-        </div>
+        <>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <StatTile label="Active Vehicles" value={kpis.activeVehicles} icon={<Truck size={16} />} />
+            <StatTile label="Available Vehicles" value={kpis.availableVehicles} icon={<PackageCheck size={16} />} />
+            <StatTile label="In Maintenance" value={kpis.vehiclesInMaintenance} icon={<Wrench size={16} />} />
+            <StatTile label="Active Trips" value={kpis.activeTrips} icon={<Route size={16} />} />
+            <StatTile label="Pending Trips" value={kpis.pendingTrips} icon={<Clock size={16} />} />
+            <StatTile label="Drivers On Duty" value={kpis.driversOnDuty} icon={<Users size={16} />} />
+            <StatTile label="Fleet Utilization" value={kpis.fleetUtilization} suffix="%" icon={<Gauge size={16} />} />
+          </div>
+
+          {kpis.vehiclesInMaintenance > 0 && (
+            <div className="card border-warn/30 bg-warn-soft px-4 py-3 mb-6 flex items-center justify-between">
+              <p className="text-sm text-warn">
+                {kpis.vehiclesInMaintenance} vehicle{kpis.vehiclesInMaintenance === 1 ? '' : 's'} currently in the shop — flagged for follow-up.
+              </p>
+              <a href="/maintenance" className="link-action">Review maintenance →</a>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <a href="/vehicles" className="card p-4 hover:border-accent/40 transition-colors">
+              <p className="text-sm font-semibold text-ink">+ Register vehicle</p>
+              <p className="text-xs text-ink-faint mt-1">Add a new vehicle to the registry</p>
+            </a>
+            <a href="/trips" className="card p-4 hover:border-accent/40 transition-colors">
+              <p className="text-sm font-semibold text-ink">Book resource</p>
+              <p className="text-xs text-ink-faint mt-1">Dispatch a vehicle and driver on a trip</p>
+            </a>
+            <a href="/maintenance" className="card p-4 hover:border-accent/40 transition-colors">
+              <p className="text-sm font-semibold text-ink">Raise request</p>
+              <p className="text-xs text-ink-faint mt-1">Log a new maintenance request</p>
+            </a>
+          </div>
+        </>
       )}
     </div>
   );

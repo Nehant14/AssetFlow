@@ -53,61 +53,63 @@ const Maintenance = () => {
   const regNo = (vehicleId) => vehicles.find(v => v.id === vehicleId)?.registrationNumber || vehicleId;
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4 text-slate-800">Maintenance</h1>
+    <div className="p-6 max-w-6xl mx-auto">
+      <h1 className="text-lg font-bold text-ink mb-5">Maintenance</h1>
 
-      <h2 className="text-lg font-semibold mb-2">Log Vehicle Maintenance</h2>
-      <form onSubmit={handleCreateMaintenance} className="bg-white p-4 shadow rounded max-w-md mb-8">
-        <select required value={selectedVehicle} onChange={(e) => setSelectedVehicle(e.target.value)} className="border p-2 w-full mb-3 rounded">
-          <option value="">Select Vehicle</option>
-          {vehicles.map(v => (
-            <option key={v.id} value={v.id}>{v.registrationNumber} - {v.status}</option>
-          ))}
-        </select>
-        <input
-          type="text"
-          placeholder="Maintenance Type (e.g., Oil Change)"
-          required
-          value={maintenanceType}
-          onChange={(e) => setMaintenanceType(e.target.value)}
-          className="border p-2 w-full mb-3 rounded"
-        />
-        <button type="submit" disabled={submitting} className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 disabled:opacity-50">
-          {submitting ? 'Logging...' : 'Log Maintenance'}
-        </button>
-      </form>
+      <div className="card p-4 max-w-md mb-8">
+        <p className="panel-header mb-3">Log vehicle maintenance</p>
+        <form onSubmit={handleCreateMaintenance} className="flex flex-col gap-3">
+          <select required value={selectedVehicle} onChange={(e) => setSelectedVehicle(e.target.value)} className="field">
+            <option value="">Select Vehicle</option>
+            {vehicles.map(v => (
+              <option key={v.id} value={v.id}>{v.registrationNumber} - {v.status}</option>
+            ))}
+          </select>
+          <input
+            type="text"
+            placeholder="Maintenance Type (e.g., Oil Change)"
+            required
+            value={maintenanceType}
+            onChange={(e) => setMaintenanceType(e.target.value)}
+            className="field"
+          />
+          <button type="submit" disabled={submitting} className="btn-primary">
+            {submitting ? 'Logging…' : 'Log Maintenance'}
+          </button>
+        </form>
+      </div>
 
-      <h2 className="text-lg font-semibold mb-2">Maintenance Logs</h2>
-      <div className="bg-white rounded shadow overflow-hidden">
-        <table className="w-full text-left border-collapse text-sm">
+      <p className="panel-header mb-2">Maintenance logs</p>
+      <div className="table-shell">
+        <table className="table-base">
           <thead>
-            <tr className="bg-gray-100 border-b">
-              <th className="p-3">Vehicle</th>
-              <th className="p-3">Type</th>
-              <th className="p-3">Status</th>
-              <th className="p-3">Actions</th>
+            <tr>
+              <th>Vehicle</th>
+              <th>Type</th>
+              <th>Status</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             {logs.length === 0 && (
-              <tr><td colSpan={4} className="p-4 text-center text-gray-500">No maintenance logs yet.</td></tr>
+              <tr><td colSpan={4} className="p-4 text-center text-ink-faint">No maintenance logs yet.</td></tr>
             )}
             {logs.map(log => (
-              <tr key={log.id} className="border-b">
-                <td className="p-3">{regNo(log.vehicleId)}</td>
-                <td className="p-3">{log.type}</td>
-                <td className="p-3">
-                  <span className={`badge ${log.status === 'Closed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+              <tr key={log.id}>
+                <td className="font-mono">{regNo(log.vehicleId)}</td>
+                <td>{log.type}</td>
+                <td>
+                  <span className={`badge ${log.status === 'Closed' ? 'badge-success' : 'badge-warn'}`}>
                     {log.status || 'Open'}
                   </span>
                 </td>
-                <td className="p-3">
+                <td>
                   {log.status !== 'Closed' ? (
-                    <button onClick={() => handleClose(log.id)} className="text-blue-600 text-sm hover:underline">
+                    <button onClick={() => handleClose(log.id)} className="link-action">
                       Close (mark Available)
                     </button>
                   ) : (
-                    <span className="text-gray-400 text-sm">—</span>
+                    <span className="text-ink-faint text-sm">—</span>
                   )}
                 </td>
               </tr>

@@ -72,67 +72,70 @@ const FuelExpenses = () => {
   });
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4 text-slate-800">Fuel & Expense Management</h1>
+    <div className="p-6 max-w-6xl mx-auto">
+      <h1 className="text-lg font-bold text-ink mb-5">Fuel &amp; Expense Management</h1>
 
-      <form onSubmit={submitLog} className="bg-white p-4 shadow rounded max-w-xl flex flex-col gap-3 mb-6">
-        <select required value={log.vehicleId} onChange={e => setLog({ ...log, vehicleId: e.target.value })} className="border p-2 rounded">
-          <option value="">Select Vehicle</option>
-          {vehicles.map(v => (
-            <option key={v.id} value={v.id}>{v.registrationNumber}</option>
-          ))}
-        </select>
-        <select value={log.type} onChange={e => setLog({ ...log, type: e.target.value })} className="border p-2 rounded">
-          <option value="Fuel">Fuel</option>
-          <option value="Toll">Toll</option>
-          <option value="Maintenance">Maintenance</option>
-          <option value="Other">Other</option>
-        </select>
-        {log.type === 'Fuel' && (
-          <input type="number" step="0.01" placeholder="Liters" required value={log.liters}
-            onChange={e => setLog({ ...log, liters: e.target.value })} className="border p-2 rounded" />
-        )}
-        <input type="number" step="0.01" placeholder="Total Cost" required value={log.cost}
-          onChange={e => setLog({ ...log, cost: e.target.value })} className="border p-2 rounded" />
-        <input type="date" required value={log.date}
-          onChange={e => setLog({ ...log, date: e.target.value })} className="border p-2 rounded" />
-        <button type="submit" disabled={submitting} className="bg-indigo-600 text-white p-2 rounded hover:bg-indigo-700 disabled:opacity-50">
-          {submitting ? 'Saving...' : 'Submit Entry'}
-        </button>
-      </form>
+      <div className="card p-4 max-w-xl mb-6">
+        <p className="panel-header mb-3">Log entry</p>
+        <form onSubmit={submitLog} className="flex flex-col gap-3">
+          <select required value={log.vehicleId} onChange={e => setLog({ ...log, vehicleId: e.target.value })} className="field">
+            <option value="">Select Vehicle</option>
+            {vehicles.map(v => (
+              <option key={v.id} value={v.id}>{v.registrationNumber}</option>
+            ))}
+          </select>
+          <select value={log.type} onChange={e => setLog({ ...log, type: e.target.value })} className="field">
+            <option value="Fuel">Fuel</option>
+            <option value="Toll">Toll</option>
+            <option value="Maintenance">Maintenance</option>
+            <option value="Other">Other</option>
+          </select>
+          {log.type === 'Fuel' && (
+            <input type="number" step="0.01" placeholder="Liters" required value={log.liters}
+              onChange={e => setLog({ ...log, liters: e.target.value })} className="field" />
+          )}
+          <input type="number" step="0.01" placeholder="Total Cost" required value={log.cost}
+            onChange={e => setLog({ ...log, cost: e.target.value })} className="field" />
+          <input type="date" required value={log.date}
+            onChange={e => setLog({ ...log, date: e.target.value })} className="field" />
+          <button type="submit" disabled={submitting} className="btn-primary">
+            {submitting ? 'Saving…' : 'Submit Entry'}
+          </button>
+        </form>
+      </div>
 
-      <div className="bg-white rounded shadow p-4 mb-6">
-        <h2 className="font-semibold mb-3">Operational Cost by Vehicle</h2>
-        {Object.keys(totalsByVehicle).length === 0 && <p className="text-gray-500 text-sm">No entries logged yet.</p>}
+      <div className="card p-4 mb-6">
+        <p className="panel-header mb-3">Operational cost by vehicle</p>
+        {Object.keys(totalsByVehicle).length === 0 && <p className="text-ink-faint text-sm">No entries logged yet.</p>}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {Object.entries(totalsByVehicle).map(([vehicleId, total]) => (
-            <div key={vehicleId} className="border rounded p-3">
-              <p className="text-sm text-gray-500">{regNo(vehicleId)}</p>
-              <p className="text-lg font-bold">₹{total.toFixed(2)}</p>
+            <div key={vehicleId} className="border border-line rounded-md p-3 bg-panel2">
+              <p className="text-xs text-ink-faint">{regNo(vehicleId)}</p>
+              <p className="text-lg font-bold font-mono text-ink">₹{total.toFixed(2)}</p>
             </div>
           ))}
         </div>
       </div>
 
-      <div className="bg-white rounded shadow overflow-hidden">
-        <table className="w-full text-left border-collapse text-sm">
+      <div className="table-shell">
+        <table className="table-base">
           <thead>
-            <tr className="bg-gray-100 border-b">
-              <th className="p-3">Vehicle</th>
-              <th className="p-3">Type</th>
-              <th className="p-3">Liters</th>
-              <th className="p-3">Cost</th>
-              <th className="p-3">Date</th>
+            <tr>
+              <th>Vehicle</th>
+              <th>Type</th>
+              <th>Liters</th>
+              <th>Cost</th>
+              <th>Date</th>
             </tr>
           </thead>
           <tbody>
             {[...fuelLogs.map(f => ({ ...f, type: 'Fuel' })), ...expenses].map((entry, idx) => (
-              <tr key={idx} className="border-b">
-                <td className="p-3">{regNo(entry.vehicleId)}</td>
-                <td className="p-3">{entry.type}</td>
-                <td className="p-3">{entry.liters ?? '—'}</td>
-                <td className="p-3">₹{Number(entry.cost || 0).toFixed(2)}</td>
-                <td className="p-3">{entry.date ? new Date(entry.date).toLocaleDateString() : '—'}</td>
+              <tr key={idx}>
+                <td className="font-mono">{regNo(entry.vehicleId)}</td>
+                <td>{entry.type}</td>
+                <td>{entry.liters ?? '—'}</td>
+                <td>₹{Number(entry.cost || 0).toFixed(2)}</td>
+                <td>{entry.date ? new Date(entry.date).toLocaleDateString() : '—'}</td>
               </tr>
             ))}
           </tbody>

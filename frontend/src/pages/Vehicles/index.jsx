@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { getVehicles, createVehicle, updateVehicleStatus } from '../../api/vehicles.api';
 
-const statusColor = {
-  Available: 'bg-green-100 text-green-800',
-  'On Trip': 'bg-blue-100 text-blue-800',
-  'In Shop': 'bg-yellow-100 text-yellow-800',
-  Retired: 'bg-gray-200 text-gray-600',
+const statusBadge = {
+  Available: 'badge-success',
+  'On Trip': 'badge-info',
+  'In Shop': 'badge-warn',
+  Retired: 'badge-neutral',
 };
 
 const emptyVehicle = {
@@ -64,60 +64,66 @@ const Vehicles = () => {
   };
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4 text-slate-800">Vehicle Registry</h1>
+    <div className="p-6 max-w-6xl mx-auto">
+      <div className="flex items-center justify-between mb-5">
+        <h1 className="text-lg font-bold text-ink">Vehicle Registry</h1>
+        <span className="text-xs text-ink-faint">{vehicles.length} registered</span>
+      </div>
 
       {/* Registration Form */}
-      <form onSubmit={handleSubmit} className="bg-white p-4 shadow rounded mb-6 grid grid-cols-2 md:grid-cols-3 gap-4">
-        <input type="text" placeholder="Registration Number (Unique)" required value={newVehicle.registrationNumber}
-          onChange={e => setNewVehicle({ ...newVehicle, registrationNumber: e.target.value })} className="border p-2 rounded" />
-        <input type="text" placeholder="Vehicle Name/Model" required value={newVehicle.name}
-          onChange={e => setNewVehicle({ ...newVehicle, name: e.target.value })} className="border p-2 rounded" />
-        <input type="text" placeholder="Vehicle Type" required value={newVehicle.type}
-          onChange={e => setNewVehicle({ ...newVehicle, type: e.target.value })} className="border p-2 rounded" />
-        <input type="number" placeholder="Max Load Capacity (kg)" required value={newVehicle.maxLoadCapacity}
-          onChange={e => setNewVehicle({ ...newVehicle, maxLoadCapacity: e.target.value })} className="border p-2 rounded" />
-        <input type="number" placeholder="Odometer" required value={newVehicle.odometer}
-          onChange={e => setNewVehicle({ ...newVehicle, odometer: e.target.value })} className="border p-2 rounded" />
-        <input type="number" placeholder="Acquisition Cost" required value={newVehicle.acquisitionCost}
-          onChange={e => setNewVehicle({ ...newVehicle, acquisitionCost: e.target.value })} className="border p-2 rounded" />
-        <button type="submit" disabled={submitting} className="bg-green-600 text-white p-2 rounded hover:bg-green-700 disabled:opacity-50 md:col-span-3">
-          {submitting ? 'Registering...' : 'Register Vehicle'}
+      <form onSubmit={handleSubmit} className="card p-4 mb-6">
+        <p className="panel-header mb-3">Register vehicle</p>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          <input type="text" placeholder="Registration Number (Unique)" required value={newVehicle.registrationNumber}
+            onChange={e => setNewVehicle({ ...newVehicle, registrationNumber: e.target.value })} className="field" />
+          <input type="text" placeholder="Vehicle Name/Model" required value={newVehicle.name}
+            onChange={e => setNewVehicle({ ...newVehicle, name: e.target.value })} className="field" />
+          <input type="text" placeholder="Vehicle Type" required value={newVehicle.type}
+            onChange={e => setNewVehicle({ ...newVehicle, type: e.target.value })} className="field" />
+          <input type="number" placeholder="Max Load Capacity (kg)" required value={newVehicle.maxLoadCapacity}
+            onChange={e => setNewVehicle({ ...newVehicle, maxLoadCapacity: e.target.value })} className="field" />
+          <input type="number" placeholder="Odometer" required value={newVehicle.odometer}
+            onChange={e => setNewVehicle({ ...newVehicle, odometer: e.target.value })} className="field" />
+          <input type="number" placeholder="Acquisition Cost" required value={newVehicle.acquisitionCost}
+            onChange={e => setNewVehicle({ ...newVehicle, acquisitionCost: e.target.value })} className="field" />
+        </div>
+        <button type="submit" disabled={submitting} className="btn-primary mt-3">
+          {submitting ? 'Registering…' : 'Register Vehicle'}
         </button>
-        {error && <p className="text-red-600 text-sm md:col-span-3">{error}</p>}
+        {error && <p className="text-danger text-xs mt-3">{error}</p>}
       </form>
 
       {/* Master List of Vehicles */}
-      <div className="bg-white rounded shadow overflow-hidden">
-        <table className="w-full text-left border-collapse">
+      <div className="table-shell">
+        <table className="table-base">
           <thead>
-            <tr className="bg-gray-100 border-b">
-              <th className="p-3">Reg No</th>
-              <th className="p-3">Model</th>
-              <th className="p-3">Type</th>
-              <th className="p-3">Capacity</th>
-              <th className="p-3">Status</th>
-              <th className="p-3">Actions</th>
+            <tr>
+              <th>Reg No</th>
+              <th>Model</th>
+              <th>Type</th>
+              <th>Capacity</th>
+              <th>Status</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             {vehicles.length === 0 && (
-              <tr><td colSpan={6} className="p-4 text-center text-gray-500">No vehicles registered yet.</td></tr>
+              <tr><td colSpan={6} className="p-4 text-center text-ink-faint">No vehicles registered yet.</td></tr>
             )}
             {vehicles.map(v => (
-              <tr key={v.id} className="border-b">
-                <td className="p-3">{v.registrationNumber}</td>
-                <td className="p-3">{v.name}</td>
-                <td className="p-3">{v.type}</td>
-                <td className="p-3">{v.maxLoadCapacity} kg</td>
-                <td className="p-3">
-                  <span className={`badge ${statusColor[v.status] || 'bg-gray-100 text-gray-700'}`}>
+              <tr key={v.id}>
+                <td className="font-mono text-ink">{v.registrationNumber}</td>
+                <td>{v.name}</td>
+                <td>{v.type}</td>
+                <td>{v.maxLoadCapacity} kg</td>
+                <td>
+                  <span className={`badge ${statusBadge[v.status] || 'badge-neutral'}`}>
                     {v.status}
                   </span>
                 </td>
-                <td className="p-3">
+                <td>
                   {v.status !== 'Retired' && v.status !== 'On Trip' && (
-                    <button onClick={() => handleRetire(v.id)} className="text-red-600 text-sm hover:underline">
+                    <button onClick={() => handleRetire(v.id)} className="link-action !text-danger">
                       Retire
                     </button>
                   )}
