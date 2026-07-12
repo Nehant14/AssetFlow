@@ -11,9 +11,13 @@ router.use(protect);
 // Admin-only operations for Master Data[cite: 1]
 router.post('/departments', restrictTo(['Admin']), deptCtrl.createDepartment);
 router.get('/departments', deptCtrl.getDepartments);
+router.patch('/departments/:id', restrictTo(['Admin']), deptCtrl.updateDepartment);
+router.delete('/departments/:id', restrictTo(['Admin']), deptCtrl.deleteDepartment);
 
 router.post('/categories', restrictTo(['Admin']), catCtrl.createCategory);
 router.get('/categories', catCtrl.getCategories);
+router.patch('/categories/:id', restrictTo(['Admin']), catCtrl.updateCategory);
+router.delete('/categories/:id', restrictTo(['Admin']), catCtrl.deleteCategory);
 
 router.get('/employees', empCtrl.getEmployees);
 router.patch('/employees/:id/role', restrictTo(['Admin']), empCtrl.updateEmployeeRole);

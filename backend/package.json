@@ -2,6 +2,14 @@
   "name": "assetflow-backend",
   "version": "1.0.0",
   "private": true,
+  "scripts": {
+    "start": "node src/server.js",
+    "build": "prisma generate && prisma migrate deploy",
+    "dev": "node src/server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "dependencies": {
     "@prisma/adapter-pg": "^6.19.3",
     "@prisma/client": "^6.19.3",

@@ -35,7 +35,7 @@ app.use('/api/maintenance', maintRoutes);
 app.use('/api/audits', auditRoutes);
 app.use('/api/notifications', noticeRoutes);
 
-app.all('*', (req, res) => {
+app.use((req, res) => {
   res.status(404).json({ status: 'error', message: `Cannot find ${req.originalUrl}` });
 });
 

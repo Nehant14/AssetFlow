@@ -1,12 +1,16 @@
-module.exports = (err, req, res, next) => {
-  console.error('💥 Error handler caught:', err);
+module.exports = (allowedRoles = []) => {
+  return (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({ status: 'error', message: 'Not authenticated.' });
+    }
 
-  const statusCode = err.statusCode || 500;
-  const message = err.message || 'Internal Server Error';
+    if (!allowedRoles.includes(req.user.role)) {
+      return res.status(403).json({
+        status: 'error',
+        message: 'You do not have permission to perform this action.'
+      });
+    }
 
-  res.status(statusCode).json({
-    status: 'error',
-    message: message,
-    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
-  });
+    next();
+  };
 };
