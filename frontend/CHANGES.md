@@ -1,5 +1,47 @@
 # TransitOps Frontend — Fixes & Additions
 
+## New in this pass — full feature-list coverage
+Added the remaining Mandatory Deliverables and Bonus Features from the hackathon spec that
+weren't in the frontend yet. Anything that's inherently a backend responsibility (e.g. actually
+sending emails, storing uploaded files, computing KPIs) still needs a real endpoint — the UI below
+calls a sensible REST route for it and is ready to wire up.
+
+**RBAC (Role-Based Access Control)** — `src/auth/roles.js` is a single capability matrix for the
+four target roles (Fleet Manager, Driver, Safety Officer, Financial Analyst). `RoleRoute.jsx` gates
+whole routes; individual pages (Drivers, Trips, Maintenance, Reports) also hide/disable
+create-edit actions and export buttons per role. The Sidebar only renders links a role can access.
+Demo Mode on the login page now lets you pick a role to explore the app as.
+
+**Dashboard & Reports charts** — `recharts` bar/pie/line charts added to Dashboard (KPI breakdown +
+fleet status split) and Reports (fuel efficiency by vehicle, ROI trend).
+
+**PDF export** — `src/utils/pdfExport.js` (jsPDF + autotable) is a reusable "export this table to
+PDF" helper. Wired into Reports, Vehicle Registry, Driver Management, Trip Management, and Fuel &
+Expenses, alongside the existing CSV export on Reports.
+
+**Email reminders for expiring licenses** — new `pages/Reminders` page (routed at `/reminders`,
+Fleet Manager / Safety Officer only) lists drivers whose license expires within 30 days with a
+"Send reminder" / "Email All" action. Backend routes expected: `GET
+/notifications/expiring-licenses`, `POST /notifications/expiring-licenses/:id/send`, `POST
+/notifications/expiring-licenses/send-bulk` (`api/notifications.api.js`).
+
+**Vehicle document management** — new `pages/Vehicles/Documents.jsx` (routed at
+`/vehicles/documents`) tracks Registration Certificate / Insurance / Permit / PUC / Fitness
+documents per vehicle with expiry-status badges and file upload. Backend routes expected: `GET
+/vehicles/documents`, `POST /vehicles/:id/documents` (multipart), `DELETE
+/vehicles/:id/documents/:docId` (`api/vehicles.api.js`).
+
+**Search, filters, sorting** — `src/hooks/useTableControls.js` (generic client-side search + sort)
+and `SearchBox` / `SortableTh` in `components/common` are now used on Vehicles, Drivers, Trips,
+Maintenance, Fuel & Expenses, and Reports.
+
+**Dark mode** — `src/context/ThemeContext.jsx` toggles a persisted light/dark theme (toggle button
+in the Navbar). The neutral palette in `tailwind.config.js` now reads from CSS variables
+(`src/index.css`) so existing utility classes (`bg-base-900`, `text-ink`, etc.) repaint for both
+themes without touching every component.
+
+---
+
 ## Critical build-breaking issues (app would not run at all before)
 - **Missing `vite.config.js`** — added, with the React plugin and a dev proxy to `/api`.
 - **Missing `tailwind.config.js` and `postcss.config.js`** — added. Every Tailwind class in the

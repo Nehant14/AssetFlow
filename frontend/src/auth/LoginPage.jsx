@@ -1,12 +1,14 @@
 import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
+import { ALL_ROLES } from '../auth/roles';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [demoRole, setDemoRole] = useState(ALL_ROLES[0]);
   const { login, loginDemo } = useContext(AuthContext);
   const navigate = useNavigate();
 
@@ -25,7 +27,7 @@ const LoginPage = () => {
   };
 
   const handleDemoLogin = () => {
-    loginDemo();
+    loginDemo(demoRole);
     navigate('/');
   };
 
@@ -87,12 +89,21 @@ const LoginPage = () => {
 
         <div className="mt-5 pt-4 border-t border-line text-center">
           <p className="text-[11px] text-ink-faint mb-2">No backend running yet?</p>
+          <select
+            value={demoRole}
+            onChange={(e) => setDemoRole(e.target.value)}
+            className="field w-full mb-2 text-xs"
+          >
+            {ALL_ROLES.map((r) => (
+              <option key={r} value={r}>{r}</option>
+            ))}
+          </select>
           <button
             type="button"
             onClick={handleDemoLogin}
             className="w-full text-xs text-ink-dim bg-panel2 border border-line rounded-md py-2 hover:border-line2 transition-colors"
           >
-            Explore in Demo Mode (no login required)
+            Explore in Demo Mode as {demoRole}
           </button>
         </div>
       </form>
