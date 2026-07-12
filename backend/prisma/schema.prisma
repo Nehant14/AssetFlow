@@ -8,104 +8,293 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+// ===== ENUMS ===== //
+
+enum Role {
+  Admin
+  AssetManager
+  DepartmentHead
+  Employee
+}
+
+enum UserStatus {
+  Active
+  Inactive
+}
+
+enum AssetStatus {
+  Available
+  Allocated
+  Reserved
+  UnderMaintenance
+  Lost
+  Retired
+  Disposed
+}
+
+enum AllocationStatus {
+  Active
+  Returned
+}
+
+enum TransferStatus {
+  Requested
+  Approved
+  Rejected
+  Completed
+}
+
+enum BookingStatus {
+  Upcoming
+  Ongoing
+  Completed
+  Cancelled
+}
+
+enum MaintenanceStatus {
+  Pending
+  Approved
+  Rejected
+  TechnicianAssigned
+  InProgress
+  Resolved
+}
+
+enum Priority {
+  Low
+  Medium
+  High
+  Critical
+}
+
+enum AuditStatus {
+  Open
+  Closed
+}
+
+enum AuditResult {
+  Verified
+  Missing
+  Damaged
+}
+
 // ===== MODELS ===== //
 
 model User {
-  id           Int         @id @default(autoincrement())
+  id           Int        @id @default(autoincrement())
   name         String
-  email        String      @unique
+  email        String     @unique
   password     String
-  role         String      @default("Employee")
+  role         Role       @default(Employee)
+  status       UserStatus @default(Active)
   departmentId Int?
-  department   Department? @relation(fields: [departmentId], references: [id])
-  status       String      @default("Active")
-  createdAt    DateTime    @default(now())
+  department   Department? @relation("DepartmentMembers", fields: [departmentId], references: [id])
+  createdAt    DateTime   @default(now())
+
+  headOfDepartment     Department?           @relation("DepartmentHead")
+  allocations          Allocation[]          @relation("AllocationEmployee")
+  bookings             Booking[]             @relation("BookingUser")
+  maintenanceRaised     MaintenanceRequest[] @relation("MaintenanceRaisedBy")
+  maintenanceAssigned   MaintenanceRequest[] @relation("MaintenanceTechnician")
+  transfersRequested    Transfer[]           @relation("TransferRequestedBy")
+  transfersApproved     Transfer[]           @relation("TransferApprovedBy")
+  auditAssignments      AuditAssignment[]
+  notifications         Notification[]
+  activityLogs          ActivityLog[]
+
+  @@index([departmentId])
 }
 
 model Department {
-  id     Int    @id @default(autoincrement())
-  name   String
-  status String @default("Active")
-  users  User[]
+  id         Int         @id @default(autoincrement())
+  name       String
+  status     UserStatus  @default(Active)
+  headId     Int?        @unique
+  head       User?       @relation("DepartmentHead", fields: [headId], references: [id])
+
+  parentId   Int?
+  parent     Department? @relation("DepartmentHierarchy", fields: [parentId], references: [id])
+  children   Department[] @relation("DepartmentHierarchy")
+
+  users        User[]       @relation("DepartmentMembers")
+  allocations  Allocation[] @relation("AllocationDepartment")
+  auditCycles  AuditCycle[]
+
+  @@index([parentId])
 }
 
 model Category {
-  id     Int     @id @default(autoincrement())
-  name   String
-  assets Asset[]
+  id            Int     @id @default(autoincrement())
+  name          String
+  customFields  Json?   // e.g. { "warrantyPeriodMonths": 24 }
+  assets        Asset[]
 }
 
 model Asset {
-  id          Int      @id @default(autoincrement())
-  tag         String   @unique
-  name        String
-  categoryId  Int
-  category    Category @relation(fields: [categoryId], references: [id])
-  condition   String   @default("Good")
-  location    String
-  status      String   @default("Available")
-  isBookable  Boolean  @default(false)
-  createdAt   DateTime @default(now())
+  id               Int         @id @default(autoincrement())
+  tag              String      @unique // auto-generated e.g. AF-0001
+  name             String
+  categoryId       Int
+  category         Category    @relation(fields: [categoryId], references: [id])
+  serialNumber     String?
+  qrCode           String?     @unique
+  acquisitionDate  DateTime?
+  acquisitionCost  Decimal?    @db.Decimal(12, 2)
+  condition        String      @default("Good")
+  location         String
+  status           AssetStatus @default(Available)
+  isBookable       Boolean     @default(false)
+  photoUrls        String[]    @default([])
+  documentUrls     String[]    @default([])
+  createdAt        DateTime    @default(now())
 
-  allocations         Allocation[]
-  bookings            Booking[]
-  maintenanceRequests MaintenanceRequest[]
-  auditItems          AuditItem[]
+  allocations          Allocation[]
+  transfers            Transfer[]
+  bookings             Booking[]
+  maintenanceRequests   MaintenanceRequest[]
+  auditItems            AuditItem[]
+
+  @@index([status])
+  @@index([categoryId])
 }
 
 model Allocation {
-  id                 Int       @id @default(autoincrement())
+  id                 Int              @id @default(autoincrement())
   assetId            Int
-  asset              Asset     @relation(fields: [assetId], references: [id])
-  employeeId         Int
-  allocatedAt        DateTime  @default(now())
+  asset              Asset            @relation(fields: [assetId], references: [id])
+
+  employeeId         Int?
+  employee           User?            @relation("AllocationEmployee", fields: [employeeId], references: [id])
+  departmentId       Int?
+  department         Department?      @relation("AllocationDepartment", fields: [departmentId], references: [id])
+
+  allocatedAt        DateTime         @default(now())
   expectedReturnDate DateTime?
   returnedAt         DateTime?
-  status             String    @default("active")
+  returnCondition    String?
+  status             AllocationStatus @default(Active)
+
+  transfers          Transfer[]
+
+  @@index([assetId])
+  @@index([employeeId])
+  @@index([status])
+}
+
+model Transfer {
+  id             Int              @id @default(autoincrement())
+  assetId        Int
+  asset          Asset            @relation(fields: [assetId], references: [id])
+  allocationId   Int?
+  allocation     Allocation?      @relation(fields: [allocationId], references: [id])
+
+  requestedById  Int
+  requestedBy    User             @relation("TransferRequestedBy", fields: [requestedById], references: [id])
+  toEmployeeId   Int?
+  toDepartmentId Int?
+
+  approvedById   Int?
+  approvedBy     User?            @relation("TransferApprovedBy", fields: [approvedById], references: [id])
+
+  status         TransferStatus   @default(Requested)
+  requestedAt    DateTime         @default(now())
+  resolvedAt     DateTime?
+
+  @@index([assetId])
+  @@index([status])
 }
 
 model Booking {
-  id        Int      @id @default(autoincrement())
+  id        Int           @id @default(autoincrement())
   assetId   Int
-  asset     Asset    @relation(fields: [assetId], references: [id])
-  bookedBy  Int
+  asset     Asset         @relation(fields: [assetId], references: [id])
+  bookedById Int
+  bookedBy  User          @relation("BookingUser", fields: [bookedById], references: [id])
   startTime DateTime
   endTime   DateTime
-  status    String   @default("Upcoming")
+  status    BookingStatus @default(Upcoming)
+
+  @@index([assetId, startTime, endTime])
 }
 
 model MaintenanceRequest {
-  id       Int    @id @default(autoincrement())
-  assetId  Int
-  asset    Asset  @relation(fields: [assetId], references: [id])
-  raisedBy Int
-  issue    String
-  priority String @default("Medium")
-  status   String @default("Pending")
+  id            Int               @id @default(autoincrement())
+  assetId       Int
+  asset         Asset             @relation(fields: [assetId], references: [id])
+
+  raisedById    Int
+  raisedBy      User              @relation("MaintenanceRaisedBy", fields: [raisedById], references: [id])
+
+  technicianId  Int?
+  technician    User?             @relation("MaintenanceTechnician", fields: [technicianId], references: [id])
+
+  issue         String
+  priority      Priority          @default(Medium)
+  photoUrl      String?
+  status        MaintenanceStatus @default(Pending)
+  createdAt     DateTime          @default(now())
+  resolvedAt    DateTime?
+
+  @@index([assetId])
+  @@index([status])
 }
 
 model AuditCycle {
-  id         Int         @id @default(autoincrement())
-  department String
-  startDate  DateTime
-  endDate    DateTime
-  status     String      @default("Open")
-  items      AuditItem[]
+  id           Int         @id @default(autoincrement())
+  departmentId Int?
+  department   Department? @relation(fields: [departmentId], references: [id])
+  location     String?
+  startDate    DateTime
+  endDate      DateTime
+  status       AuditStatus @default(Open)
+
+  items        AuditItem[]
+  auditors     AuditAssignment[]
+
+  @@index([departmentId])
 }
 
-model AuditItem {
+model AuditAssignment {
   id           Int        @id @default(autoincrement())
   auditCycleId Int
   auditCycle   AuditCycle @relation(fields: [auditCycleId], references: [id])
+  auditorId    Int
+  auditor      User       @relation(fields: [auditorId], references: [id])
+
+  @@unique([auditCycleId, auditorId])
+}
+
+model AuditItem {
+  id           Int          @id @default(autoincrement())
+  auditCycleId Int
+  auditCycle   AuditCycle   @relation(fields: [auditCycleId], references: [id])
   assetId      Int
-  asset        Asset      @relation(fields: [assetId], references: [id])
-  result       String?
+  asset        Asset        @relation(fields: [assetId], references: [id])
+  result       AuditResult?
+  notes        String?
+
+  @@index([auditCycleId])
 }
 
 model Notification {
   id        Int      @id @default(autoincrement())
   userId    Int
+  user      User     @relation(fields: [userId], references: [id])
   message   String
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
+
+  @@index([userId, isRead])
+}
+
+model ActivityLog {
+  id         Int      @id @default(autoincrement())
+  actorId    Int
+  actor      User     @relation(fields: [actorId], references: [id])
+  action     String   // e.g. "MAINTENANCE_APPROVED"
+  entityType String   // e.g. "Asset", "Booking"
+  entityId   Int
+  createdAt  DateTime @default(now())
+
+  @@index([entityType, entityId])
 }
