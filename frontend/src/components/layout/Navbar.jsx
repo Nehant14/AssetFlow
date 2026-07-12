@@ -4,18 +4,31 @@ import { AuthContext } from '../../context/AuthContext';
 const Navbar = () => {
   const { user, logout } = useContext(AuthContext);
 
+  const initials = (user?.name || user?.email || 'U')
+    .split(' ')
+    .map(p => p[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
+
   return (
-    <header className="bg-white shadow-sm h-16 flex items-center justify-between px-6">
-      <h2 className="text-xl font-semibold text-gray-800">
+    <header className="h-16 shrink-0 bg-base-800 border-b border-line flex items-center justify-between px-6">
+      <h2 className="text-sm font-semibold text-ink">
         Transport Operations Platform
       </h2>
-      <div className="flex items-center space-x-4">
-        <span className="text-sm text-gray-600">
-          Role: <span className="font-bold">{user?.role || 'Fleet Manager'}</span>
+      <div className="flex items-center gap-4">
+        <span className="badge badge-info">
+          {user?.role || 'Fleet Manager'}
         </span>
-        <button 
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-full bg-panel2 border border-line flex items-center justify-center text-xs font-semibold text-ink-dim">
+            {initials}
+          </div>
+          <span className="text-sm text-ink-dim hidden sm:inline">{user?.name || user?.email}</span>
+        </div>
+        <button
           onClick={logout}
-          className="text-sm bg-red-50 text-red-600 px-4 py-2 rounded-md hover:bg-red-100"
+          className="text-xs font-medium bg-danger-soft text-danger border border-danger/30 px-3 py-1.5 rounded-md hover:bg-danger/20 transition-colors"
         >
           Logout
         </button>
